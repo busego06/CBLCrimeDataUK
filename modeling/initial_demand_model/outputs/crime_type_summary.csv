@@ -1,0 +1,15 @@
+Crime type,incidents,demand_points,severity_weight
+Violence and sexual offences,407308,2036540.0,5.0
+Vehicle crime,90710,226775.0,2.5
+Criminal damage and arson,76993,192482.5,2.5
+Burglary,49957,149871.0,3.0
+Shoplifting,88836,133254.0,1.5
+Public order,59386,118772.0,2.0
+Robbery,21948,98766.0,4.5
+Other theft,63962,95943.0,1.5
+Possession of weapons,19603,78412.0,4.0
+Anti-social behaviour,73466,73466.0,1.0
+Drugs,25224,50448.0,2.0
+Other crime,19274,38548.0,2.0
+Theft from the person,8906,17812.0,2.0
+Bicycle theft,5936,7123.2,1.2

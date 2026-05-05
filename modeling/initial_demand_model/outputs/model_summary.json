@@ -1,0 +1,81 @@
+{
+  "source": {
+    "publisher": "Single Online Home National Digital Team / data.police.uk",
+    "download_page": "https://data.police.uk/data/",
+    "force": "West Midlands Police",
+    "date_range": "2023-04 to 2026-03",
+    "download_job_url": "https://data.police.uk/data/fetch/2ca85ca1-9c24-4910-847b-a8fd9b91fbc5/"
+  },
+  "dataset": {
+    "incident_rows": 1011509,
+    "months": 36,
+    "lsoas": 1803,
+    "crime_types": 14,
+    "total_weighted_demand_points": 3318212.7
+  },
+  "model": {
+    "best_ridge_alpha": 250.0,
+    "ridge_weight_in_hybrid": 1.0,
+    "validation_calibration_factor": 1.0654378263245698,
+    "features": [
+      "lag_1",
+      "lag_2",
+      "lag_3",
+      "roll_3",
+      "roll_6",
+      "lag_12",
+      "prev_mean",
+      "recent_trend",
+      "month_sin",
+      "month_cos"
+    ],
+    "test_period": "2025-10 to 2026-03",
+    "hybrid_metrics": {
+      "model": "Hybrid demand model",
+      "test_months": "2025-10 to 2026-03",
+      "MAE_LSOA_month": 13.463066027725775,
+      "RMSE_LSOA_month": 19.552775909230785,
+      "WAPE": 0.2836819508378147,
+      "top_10pct_hotspot_recall": 0.7384898710865562
+    },
+    "ridge_metrics": {
+      "model": "Ridge lag model",
+      "test_months": "2025-10 to 2026-03",
+      "MAE_LSOA_month": 13.463066027725775,
+      "RMSE_LSOA_month": 19.552775909230785,
+      "WAPE": 0.2836819508378147,
+      "top_10pct_hotspot_recall": 0.7384898710865562
+    },
+    "rolling_baseline_metrics": {
+      "model": "Rolling 3-month baseline",
+      "test_months": "2025-10 to 2026-03",
+      "MAE_LSOA_month": 14.464790164540581,
+      "RMSE_LSOA_month": 20.569726980772387,
+      "WAPE": 0.3047894056142921,
+      "top_10pct_hotspot_recall": 0.723756906077348
+    }
+  },
+  "forecast": {
+    "forecast_month": "2026-04",
+    "top_10pct_lsoa_share_predicted_demand": 0.33539914678626803,
+    "top_20pct_lsoa_share_predicted_demand": 0.4906225060807212,
+    "priority_lsoas": 181,
+    "reserve_lsoas": 19
+  },
+  "severity_weights": {
+    "Anti-social behaviour": 1.0,
+    "Bicycle theft": 1.2,
+    "Other theft": 1.5,
+    "Shoplifting": 1.5,
+    "Public order": 2.0,
+    "Drugs": 2.0,
+    "Other crime": 2.0,
+    "Theft from the person": 2.0,
+    "Vehicle crime": 2.5,
+    "Criminal damage and arson": 2.5,
+    "Burglary": 3.0,
+    "Possession of weapons": 4.0,
+    "Robbery": 4.5,
+    "Violence and sexual offences": 5.0
+  }
+}
