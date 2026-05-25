@@ -10,6 +10,24 @@ Project question:
 
 ## Current Models
 
+### Police Demand Planning Dashboard
+
+Location:
+
+```text
+dashboard/police_demand_allocation_dashboard/
+```
+
+This is an interactive decision-support dashboard for non-technical police resource planners. The upgraded version combines the existing police.uk demand model with official GOV.UK English Indices of Deprivation 2025 context data, including population, income, employment and education indicators.
+
+Open the dashboard locally:
+
+```text
+dashboard/police_demand_allocation_dashboard/index.html
+```
+
+
+
 ### Initial police demand model
 
 Location:
