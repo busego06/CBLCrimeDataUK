@@ -1,0 +1,38 @@
+{
+  "title": "Police Demand Review Map",
+  "subtitle": "Monthly decision-support prototype for non-technical police resource planners",
+  "courseQuestion": "How can data-driven estimates of police demand be used to inform the effective organisation and allocation of policing resources in the United Kingdom?",
+  "stakeholder": "UK police resource planners and policing decision-makers",
+  "force": "Police.uk all-force archive",
+  "dateRange": "2023-04 to 2026-03",
+  "forecastMonth": "2026-04",
+  "publisher": "Single Online Home National Digital Team / data.police.uk",
+  "downloadPage": "https://data.police.uk/data/archive/2026-03.zip",
+  "contextSource": "GOV.UK English Indices of Deprivation 2025, File 7: ranks, scores, deciles and population denominators",
+  "contextDownload": "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2025",
+  "incidentRows": 17163400,
+  "lsoas": 35724,
+  "months": 36,
+  "crimeTypes": 14,
+  "contextCoverage": 32863,
+  "sourceNote": "Uses official police.uk recorded crime data. English social context is matched where GOV.UK IoD 2025 LSOA data are available; non-English areas keep the crime-history forecast without fabricated context.",
+  "modelCaution": "This is a decision-support prototype, not an automatic deployment system or staffing calculator.",
+  "modelUpgrade": "Forecasts combine tested local crime-history patterns with official income, employment and education context where available.",
+  "clusteringCenters": [
+    {
+      "lat": 51.5074,
+      "lon": -0.1278,
+      "weight": 100000000.0
+    },
+    {
+      "lat": 52.4862,
+      "lon": -1.8904,
+      "weight": 100000000.0
+    },
+    {
+      "lat": 53.4808,
+      "lon": -2.2426,
+      "weight": 100000000.0
+    }
+  ]
+}

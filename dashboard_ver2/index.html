@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Police Demand Review Map</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Group 10 prototype</p>
+        <h1>Police Demand Review Map</h1>
+        <p class="subhead">
+          A clear monthly map for police planners. It combines recorded crime,
+          severity, recent change, and education/economic context into one review
+          priority.
+        </p>
+      </div>
+      <div class="forecast-card">
+        <span id="forceName">West Midlands Police</span>
+        <strong id="forecastMonth">Forecast month</strong>
+      </div>
+    </header>
+
+    <main>
+      <section class="controls" aria-label="Map controls">
+        <label>
+          View area
+          <select id="authoritySelect"></select>
+        </label>
+        <label>
+          Search
+          <input id="searchInput" type="search" placeholder="Search Birmingham, Coventry, E010..." />
+        </label>
+        <button id="downloadButton" type="button">Download review list</button>
+      </section>
+
+      <section class="summary-grid" aria-label="Map summary">
+        <article>
+          <span>Priority review</span>
+          <strong id="priorityCount">-</strong>
+          <small>Areas to review first</small>
+        </article>
+        <article>
+          <span>Reserve watch</span>
+          <strong id="reserveCount">-</strong>
+          <small>Possible emerging pressure</small>
+        </article>
+        <article>
+          <span>Routine coverage</span>
+          <strong id="routineCount">-</strong>
+          <small>Baseline monthly coverage</small>
+        </article>
+        <article>
+          <span>Local authorities</span>
+          <strong id="zoneCount">-</strong>
+          <small>Overview planning units</small>
+        </article>
+        <article>
+          <span>Areas shown</span>
+          <strong id="shownCount">-</strong>
+          <small id="shownLabel">West Midlands pilot</small>
+        </article>
+      </section>
+
+      <section class="map-layout">
+        <article class="map-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Main output</p>
+              <h2 id="mapTitle">UK review overview</h2>
+              <p id="mapDescription" class="section-note">
+                Start with local-authority pressure. Choose an area to inspect LSOA-level review points.
+              </p>
+            </div>
+            <div class="legend">
+              <span><i class="priority-dot"></i>Priority review</span>
+              <span><i class="reserve-dot"></i>Reserve watch</span>
+              <span><i class="routine-dot"></i>Routine coverage</span>
+            </div>
+          </div>
+          <div id="allocationMap" role="img" aria-label="Monthly police demand review map"></div>
+          <p class="map-note">
+            Basemap by CARTO using OpenStreetMap data. The UK overview uses
+            local-authority summary circles; local views use approximate LSOA centroids
+            from anonymised police.uk records.
+          </p>
+        </article>
+
+        <aside class="area-panel">
+          <p id="panelEyebrow" class="eyebrow">Selected area</p>
+          <h2 id="areaName">Select an area</h2>
+          <p id="areaMeta" class="muted">Click a point on the map or a row below.</p>
+          <span id="areaTier" class="tier-badge">No selection</span>
+
+          <div class="area-stats">
+            <div>
+              <span id="metricOneLabel">Forecasted demand</span>
+              <strong id="areaDemand">-</strong>
+            </div>
+            <div>
+              <span id="metricTwoLabel">Recent change</span>
+              <strong id="areaUplift">-</strong>
+            </div>
+            <div>
+              <span id="metricThreeLabel">Serious-crime share</span>
+              <strong id="areaHarm">-</strong>
+            </div>
+            <div>
+              <span id="metricFourLabel">Social context</span>
+              <strong id="areaContext">-</strong>
+            </div>
+          </div>
+
+          <div class="context-card">
+            <h3 id="contextTitle">Local context profile</h3>
+            <p id="contextHint">Lower deciles mean stronger social or economic pressure.</p>
+            <div id="contextProfile" class="context-profile"></div>
+          </div>
+
+          <div class="area-details">
+            <div>
+              <span id="detailOneLabel">Population</span>
+              <strong id="areaPopulation">-</strong>
+            </div>
+            <div>
+              <span id="detailTwoLabel">Repeated high-demand months</span>
+              <strong id="areaRepeat">-</strong>
+            </div>
+          </div>
+
+          <div class="reason-box">
+            <h3>Why it is marked this way</h3>
+            <p id="areaReason">Select an area to see the main reasons in plain language.</p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="lower-grid">
+        <article class="list-card">
+          <div class="section-head compact">
+            <div>
+              <p class="eyebrow">Review list</p>
+              <h2>Top areas to check</h2>
+            </div>
+          </div>
+          <div id="rankingList" class="ranking-list"></div>
+        </article>
+
+        <article class="explain-card">
+          <p class="eyebrow">What the map combines</p>
+          <h2>One result, several signals</h2>
+          <div class="factor-grid">
+            <div>
+              <b>Recorded demand</b>
+              <p>Recent and historical police.uk recorded crime demand.</p>
+            </div>
+            <div>
+              <b>Crime severity</b>
+              <p>More serious offence types count more than low-harm incidents.</p>
+            </div>
+            <div>
+              <b>Recent change</b>
+              <p>Areas with unusual upward movement are not hidden by long-term averages.</p>
+            </div>
+            <div>
+              <b>Education and economy</b>
+              <p>Official deprivation, income, employment, and education context help interpret risk.</p>
+            </div>
+            <div>
+              <b>Overview to detail</b>
+              <p>The national view starts with local authorities, then opens the LSOA-level review map only when needed.</p>
+            </div>
+          </div>
+          <div class="plain-warning">
+            <b>Important:</b> priority means "review first". It does not mean automatic
+            enforcement or automatic officer deployment.
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="data/dashboard_data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
