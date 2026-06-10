@@ -1,3 +1,4 @@
+import glob
 import json
 import zipfile
 from pathlib import Path
@@ -6,10 +7,11 @@ import numpy as np
 import pandas as pd
 
 dashboardFolder = Path(__file__).resolve().parent
+dataFolder = dashboardFolder / "data"
 
-crimeDataFile = dashboardFolder + "/data/police_uk_archive_2026_03.zip"
-deprecationFile = dashboardFolder + "/data/File_7_IoD2025_All_Ranks_Scores_Deciles_Population_Denominators.csv"
-LSOAPredictFile = dashboardFolder + "/data/officialmodel_2026_lsoa_predictions.csv"
+crimeDataFile = dataFolder / "CrimeData"
+deprecationFile = dataFolder / "File_7_IoD2025_All_Ranks_Scores_Deciles_Population_Denominators.csv"
+LSOAPredictFile = dataFolder / "officialmodel_2026_lsoa_predictions.csv"
 
 forecastYear = 2026
 
@@ -33,93 +35,57 @@ severityWeights = {
 
 
 def readCrimeData(path):
-    usecols = ["Month", "Longitude", "Latitude", "LSOA code", "LSOA name", "Crime type"]
-    monthly_parts = []
-    crime_type_parts = []
-    incident_rows = 0
+    neededInfo = ["Month", "Longitude", "Latitude", "LSOA code", "LSOA name", "Crime type"]
+    files = glob.glob(str(path / "**/*.csv"), recursive=True)
+    
+    data = []
+    for number, filepath in enumerate(sorted(files), start=1):
+        print(f"[{number}/{len(files)}] reading {Path(filepath).name}")
+        data.append(pd.read_csv(filepath, usecols=neededInfo, low_memory=False))
+    
+    crimeData = pd.concat(data, ignore_index=True)
+    crimeData = crimeData.dropna(subset=["LSOA code"])
+    crimeData["Month"] = pd.to_datetime(crimeData["Month"])
+    crimeData["Longitude"] = pd.to_numeric(crimeData["Longitude"], errors="coerce")
+    crimeData["Latitude"] = pd.to_numeric(crimeData["Latitude"], errors="coerce")
 
-    with zipfile.ZipFile(path) as archive:
-        street_files = sorted(
-            name for name in archive.namelist()
-            if Path(name).name.endswith("-street.csv")
-        )
-
-        for number, filename in enumerate(street_files, start=1):
-            print(f"[{number}/{len(street_files)}] reading {Path(filename).name}")
-
-            with archive.open(filename) as file:
-                for chunk in pd.read_csv(file, usecols=usecols, chunksize=250_000, low_memory=False):
-                    chunk = chunk.dropna(subset=["LSOA code"]).copy()
-                    if chunk.empty:
-                        continue
-
-                    chunk["Month"] = pd.PeriodIndex(chunk["Month"], freq="M").astype(str)
-                    chunk["Longitude"] = pd.to_numeric(chunk["Longitude"], errors="coerce")
-                    chunk["Latitude"] = pd.to_numeric(chunk["Latitude"], errors="coerce")
-                    chunk["severity_weight"] = chunk["Crime type"].map(severityWeights).fillna(1.0)
-                    chunk["high_harm_incident"] = (chunk["severity_weight"] >= 4.0).astype(int)
-                    incident_rows += len(chunk)
-
-                    monthly_parts.append(
-                        chunk.groupby(["LSOA code", "LSOA name", "Month"], as_index=False)
-                        .agg(
-                            incidents=("Crime type", "size"),
-                            demand_points=("severity_weight", "sum"),
-                            high_harm_incidents=("high_harm_incident", "sum"),
-                            longitude=("Longitude", "mean"),
-                            latitude=("Latitude", "mean"),
-                        )
-                    )
-
-                    crime_type_parts.append(
-                        chunk.groupby("Crime type", as_index=False)
-                        .agg(
-                            incidents=("Crime type", "size"),
-                            demand_points=("severity_weight", "sum"),
-                            severity_weight=("severity_weight", "first"),
-                        )
-                    )
-
-    monthly_raw = pd.concat(monthly_parts, ignore_index=True)
+    ## Needed?
+    crimeData["severity_weight"] = crimeData["Crime type"].map(severityWeights).fillna(1.0)
+    crimeData["high_harm_incident"] = (crimeData["severity_weight"] >= 4.0).astype(int)
+    incident_rows = len(crimeData)
 
     panel = (
-        monthly_raw.groupby(["LSOA code", "Month"], as_index=False)
+        crimeData.groupby(["LSOA code", "Month"], as_index=False)
         .agg(
             LSOA_name=("LSOA name", "last"),
-            incidents=("incidents", "sum"),
-            demand_points=("demand_points", "sum"),
-            high_harm_incidents=("high_harm_incidents", "sum"),
-            longitude=("longitude", "mean"),
-            latitude=("latitude", "mean"),
+            incidents=("Crime type", "size"),
+            demand_points=("severity_weight", "sum"),
+            high_harm_incidents=("high_harm_incident", "sum"),
+            longitude=("Longitude", "mean"),
+            latitude=("Latitude", "mean"),
         )
         .sort_values(["LSOA code", "Month"])
     )
 
     crime_type_summary = (
-        pd.concat(crime_type_parts, ignore_index=True)
-        .groupby("Crime type", as_index=False)
+        crimeData.groupby("Crime type", as_index=False)
         .agg(
-            incidents=("incidents", "sum"),
-            demand_points=("demand_points", "sum"),
+            incidents=("Crime type", "size"),
+            demand_points=("severity_weight", "sum"),
             severity_weight=("severity_weight", "first"),
         )
         .sort_values("demand_points", ascending=False)
     )
 
-    monthly_summary = (
-        panel.groupby("Month", as_index=False)
-        .agg(
+    monthly_summary = (panel.groupby("Month", as_index=False).agg(
             incidents=("incidents", "sum"),
             demand_points=("demand_points", "sum"),
-            high_harm_incidents=("high_harm_incidents", "sum"),
-        )
-        .sort_values("Month")
-    )
+            high_harm_incidents=("high_harm_incidents", "sum")).sort_values("Month"))
 
     return panel, crime_type_summary, monthly_summary, incident_rows
 
 
-def load_context(path: Path) -> pd.DataFrame:
+def loadContext(path):
     columns = {
         "LSOA code (2021)": "LSOA code",
         "LSOA name (2021)": "official_lsoa_name",
@@ -145,7 +111,7 @@ def load_context(path: Path) -> pd.DataFrame:
     return context
 
 
-def load_ssa7_forecast(path: Path, panel: pd.DataFrame) -> pd.DataFrame:
+def loadModelForecast(path, panel):
     forecast = pd.read_csv(path)
     forecast = forecast[forecast["Year"] == forecastYear].copy()
 
@@ -153,7 +119,7 @@ def load_ssa7_forecast(path: Path, panel: pd.DataFrame) -> pd.DataFrame:
         "LSOA": "LSOA code",
         "LAD": "lad_code",
         "LSOA Share": "lsoa_share",
-        "LSOA Predicted Count": "predicted_demand_points",
+        "LSOA Predicted Count": "predicted_demand_points"
     })
 
     forecast["predicted_demand_points"] = pd.to_numeric(forecast["predicted_demand_points"], errors="coerce").fillna(0)
@@ -190,7 +156,7 @@ def load_ssa7_forecast(path: Path, panel: pd.DataFrame) -> pd.DataFrame:
     return forecast
 
 
-def percentile_rank(series: pd.Series) -> pd.Series:
+def percentile_rank(series):
     return series.rank(pct=True, method="average").fillna(0)
 
 
@@ -369,11 +335,11 @@ def create_dashboard_payload(panel, crime_type_summary, monthly_summary, context
 
 
 def write_outputs(payload, forecast, monthly_summary):
-    DATA_DIR.mkdir(exist_ok=True)
-    forecast.to_csv(DATA_DIR / "ssa7_dashboard_forecast.csv", index=False)
-    monthly_summary.to_csv(DATA_DIR / "ssa7_monthly_summary.csv", index=False)
+    dataFolder.mkdir(exist_ok=True)
+    forecast.to_csv(dataFolder / "ssa7_dashboard_forecast.csv", index=False)
+    monthly_summary.to_csv(dataFolder / "ssa7_monthly_summary.csv", index=False)
 
-    with open(DATA_DIR / "dashboard_data.js", "w", encoding="utf-8") as file:
+    with open(dataFolder / "dashboard_data.js", "w", encoding="utf-8") as file:
         file.write("window.DASHBOARD_DATA = ")
         json.dump(payload, file, ensure_ascii=False, separators=(",", ":"))
         file.write(";")
@@ -381,8 +347,8 @@ def write_outputs(payload, forecast, monthly_summary):
 
 def main():
     panel, crime_type_summary, monthly_summary, incident_rows = readCrimeData(crimeDataFile)
-    context = load_context(deprecationFile)
-    forecast = load_ssa7_forecast(LSOAPredictFile, panel)
+    context = loadContext(deprecationFile)
+    forecast = loadModelForecast(LSOAPredictFile, panel)
 
     payload = create_dashboard_payload(
         panel=panel,
@@ -399,7 +365,7 @@ def main():
         "areas": len(payload["areas"]),
         "incidentRows": payload["meta"]["incidentRows"],
         "contextCoverage": payload["meta"]["contextCoverage"],
-        "dashboardFile": str(DATA_DIR / "dashboard_data.js"),
+        "dashboardFile": str(dataFolder / "dashboard_data.js"),
     }, indent=2))
 
 
