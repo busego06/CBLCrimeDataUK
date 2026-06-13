@@ -9,40 +9,28 @@ const state = {
 };
 
 const els = {
-  forceName: document.getElementById("forceName"),
+  dataFrom: document.getElementById("dataFrom"),
   forecastMonth: document.getElementById("forecastMonth"),
   authoritySelect: document.getElementById("authoritySelect"),
   searchInput: document.getElementById("searchInput"),
   downloadButton: document.getElementById("downloadButton"),
+
   priorityCount: document.getElementById("priorityCount"),
-  reserveCount: document.getElementById("reserveCount"),
-  routineCount: document.getElementById("routineCount"),
-  zoneCount: document.getElementById("zoneCount"),
+  riskyCount: document.getElementById("reserveCount"),
+  standardCount: document.getElementById("routineCount"),
   shownCount: document.getElementById("shownCount"),
   shownLabel: document.getElementById("shownLabel"),
+
   allocationMap: document.getElementById("allocationMap"),
-  mapTitle: document.getElementById("mapTitle"),
   mapDescription: document.getElementById("mapDescription"),
-  panelEyebrow: document.getElementById("panelEyebrow"),
-  areaName: document.getElementById("areaName"),
-  areaMeta: document.getElementById("areaMeta"),
-  areaTier: document.getElementById("areaTier"),
-  metricOneLabel: document.getElementById("metricOneLabel"),
-  metricTwoLabel: document.getElementById("metricTwoLabel"),
-  metricThreeLabel: document.getElementById("metricThreeLabel"),
-  metricFourLabel: document.getElementById("metricFourLabel"),
-  areaDemand: document.getElementById("areaDemand"),
-  areaUplift: document.getElementById("areaUplift"),
-  areaHarm: document.getElementById("areaHarm"),
-  areaContext: document.getElementById("areaContext"),
+  mapSelectedArea: document.getElementById("mapSelectedArea"),
+  mapLevel: document.getElementById("mapLevel"),
+  mapPopulation: document.getElementById("mapPopulation"),
+
   contextTitle: document.getElementById("contextTitle"),
   contextHint: document.getElementById("contextHint"),
   contextProfile: document.getElementById("contextProfile"),
-  detailOneLabel: document.getElementById("detailOneLabel"),
-  detailTwoLabel: document.getElementById("detailTwoLabel"),
-  areaPopulation: document.getElementById("areaPopulation"),
-  areaRepeat: document.getElementById("areaRepeat"),
-  areaReason: document.getElementById("areaReason"),
+
   rankingList: document.getElementById("rankingList"),
 };
 
@@ -54,55 +42,46 @@ const mapState = {
 
 const tierText = {
   priority: "Priority Patrol",
-  risky: "Risk Addressing Patrol",
-  standard: "Standard Patrol",
+  reserve: "Risk Addressing Patrol",
+  routine: "Standard Patrol",
 };
 
 function formatFloat(value, decimals = 0) {
   return Number(value || 0).toLocaleString("en-GB", {
-    maximumFractionDigits: decimals,
     minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   });
 }
 
 function formatPercent(value, decimals = 1) {
-  return `${(value * 100).toLocaleString("en-GB", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
-  })}%`;
+  return `${formatFloat(Number(value || 0) * 100, decimals)}%`;
 }
 
-function sum(items, getter) {
-  return items.reduce((total, item) => total + Number(getter(item) || 0), 0);
-}
-
-function weightedAverage(items, valueGetter, weightGetter) {
+function weightedAverageByDemand(items, columnName) {
   let weightedTotal = 0;
   let totalWeight = 0;
 
-  items.forEach((item) => {
-    const value = Number(valueGetter(item));
-    const weight = Math.max(0, Number(weightGetter(item) || 0));
+  for (const item of items) {
+    const value = Number(item[columnName]);
+    const weight = Number(item.predictedDemand || 0);
 
     if (Number.isFinite(value) && weight > 0) {
       weightedTotal += value * weight;
       totalWeight += weight;
     }
-  });
+  }
 
-  return totalWeight ? weightedTotal / totalWeight : 0;
+  if (totalWeight === 0) {
+    return 0;
+  }
+
+  return weightedTotal / totalWeight;
 }
 
 function tierColor(tier) {
-  if (tier === "priority") return "#c94b43";
-  if (tier === "reserve") return "#c98522";
-  return "#5b83a8";
-}
-
-function tierClass(tier) {
-  if (tier === "priority") return "tier-priority";
-  if (tier === "reserve") return "tier-reserve";
-  return "tier-routine";
+  if (tier === "priority") return "#b71c1c";
+  if (tier === "reserve") return "#ef6c00";
+  return "#1565c0";
 }
 
 function tierFromModel(area) {
@@ -111,31 +90,6 @@ function tierFromModel(area) {
   if (tier.includes("priority")) return "priority";
   if (tier.includes("reserve")) return "reserve";
   return "routine";
-}
-
-function contextPressure(area) {
-  const deciles = [
-    area.imdDecile,
-    area.incomeDecile,
-    area.employmentDecile,
-    area.educationDecile,
-  ].filter((value) => Number(value) > 0);
-
-  if (!deciles.length) return 0;
-
-  const pressure =
-    deciles.reduce((total, decile) => total + (11 - Number(decile)) / 10, 0) /
-    deciles.length;
-
-  return Math.max(0, Math.min(1, pressure));
-}
-
-function pressureLabel(decile) {
-  if (!decile) return "No match";
-  if (decile <= 2) return "Very high";
-  if (decile <= 4) return "High";
-  if (decile <= 7) return "Medium";
-  return "Lower";
 }
 
 function contextRow(label, decile) {
@@ -147,33 +101,41 @@ function contextRow(label, decile) {
     <div class="context-row">
       <div>
         <b>${label}</b>
-        <span>${pressureLabel(cleanDecile)} pressure</span>
       </div>
       <div class="context-meter" aria-hidden="true">
         <i style="width: ${width}"></i>
       </div>
-      <strong>${cleanDecile ? `${cleanDecile}/10` : "-"}</strong>
+      <strong>${pressure ? `${pressure}/10` : "-"}</strong>
     </div>
   `;
 }
 
-function baseAreas() {
-  return state.areas.filter(
-    (area) => state.ladSelected === "all" || area.ladName === state.ladSelected
-  );
-}
-
 function visibleAreas() {
+  let areas = [];
+
+  for (const area of state.areas) {
+    if (state.ladSelected === "all" || area.ladName === state.ladSelected) {
+      areas.push(area);
+    }
+  }
+
   const query = state.search.trim().toLowerCase();
-  const areas = baseAreas();
 
-  if (!query) return areas;
+  if (!query) {
+    return areas;
+  }
 
-  return areas.filter((area) =>
-    `${area.name} ${area.lsoaName} ${area.lsoaCode} ${area.ladName} ${area.ladCode}`
-      .toLowerCase()
-      .includes(query)
-  );
+  let searchedAreas = [];
+
+  for (const area of areas) {
+    const searchableText = `${area.name} ${area.lsoaName} ${area.lsoaCode} ${area.ladName} ${area.ladCode}`;
+
+    if (searchableText.toLowerCase().includes(query)) {
+      searchedAreas.push(area);
+    }
+  }
+
+  return searchedAreas;
 }
 
 function isNationalOverview() {
@@ -181,58 +143,82 @@ function isNationalOverview() {
 }
 
 function selectedArea() {
-  if (!state.selectedCode) return null;
-  return state.areas.find((area) => area.lsoaCode === state.selectedCode) || null;
-}
+  if (!state.selectedCode) {
+    return null;
+  }
 
-function selectedAuthoritySummary() {
-  if (state.ladSelected === "all") return null;
-  return state.authoritySummaries.find((summary) => summary.name === state.ladSelected) || null;
+  for (const area of state.areas) {
+    if (area.lsoaCode === state.selectedCode) {
+      return area;
+    }
+  }
+
+  return null;
 }
 
 function buildAuthoritySummaries(areas) {
   const groups = new Map();
 
-  areas.forEach((area) => {
-    const authority = area.ladName || "Unknown area";
-    if (!groups.has(authority)) groups.set(authority, []);
-    groups.get(authority).push(area);
-  });
+  for (const area of areas) {
+    const ladName = area.ladName || "Unknown area";
 
-  return Array.from(groups.entries())
-    .map(([name, members]) => {
-      const demand = sum(members, (area) => area.predictedDemand);
-      const population = sum(members, (area) => area.population);
-      const priorityCount = members.filter((area) => area.tier === "priority").length;
-      const reserveCount = members.filter((area) => area.tier === "reserve").length;
-      const routineCount = members.length - priorityCount - reserveCount;
-      const weight = (area) => Math.max(1, Number(area.predictedDemand || 1));
+    if (!groups.has(ladName)) {
+      groups.set(ladName, []);
+    }
 
-      const tier =
-        priorityCount > 0
-          ? "priority"
-          : reserveCount > 0
-            ? "reserve"
-            : "routine";
+    groups.get(ladName).push(area);
+  }
 
-      return {
-        name,
-        members,
-        demand,
-        population,
-        priorityCount,
-        reserveCount,
-        routineCount,
-        tier,
-        latitude: weightedAverage(members, (area) => area.latitude, weight),
-        longitude: weightedAverage(members, (area) => area.longitude, weight),
-        imdDecile: weightedAverage(members, (area) => area.imdDecile, weight),
-        incomeDecile: weightedAverage(members, (area) => area.incomeDecile, weight),
-        employmentDecile: weightedAverage(members, (area) => area.employmentDecile, weight),
-        educationDecile: weightedAverage(members, (area) => area.educationDecile, weight),
-      };
-    })
-    .sort((a, b) => b.demand - a.demand);
+  const summaries = [];
+
+  for (const [name, members] of groups.entries()) {
+    let demand = 0;
+    let population = 0;
+    let priorityCount = 0;
+    let reserveCount = 0;
+
+    for (const area of members) {
+      demand += Number(area.predictedDemand || 0);
+      population += Number(area.population || 0);
+
+      if (area.tier === "priority") {
+        priorityCount++;
+      }
+
+      if (area.tier === "reserve") {
+        reserveCount++;
+      }
+    }
+
+    const routineCount = members.length - priorityCount - reserveCount;
+
+    let tier = "routine";
+
+    if (priorityCount > 3) {
+      tier = "priority";
+    } else if (reserveCount > 3) {
+      tier = "reserve";
+    }
+
+    summaries.push({
+      name,
+      members,
+      demand,
+      population,
+      priorityCount,
+      reserveCount,
+      routineCount,
+      tier,
+      latitude: weightedAverageByDemand(members, "latitude"),
+      longitude: weightedAverageByDemand(members, "longitude"),
+      imdDecile: weightedAverageByDemand(members, "imdDecile"),
+      incomeDecile: weightedAverageByDemand(members, "incomeDecile"),
+      employmentDecile: weightedAverageByDemand(members, "employmentDecile"),
+      educationDecile: weightedAverageByDemand(members, "educationDecile"),
+    });
+  }
+
+  return summaries.sort((a, b) => b.demand - a.demand);
 }
 
 function prepareData() {
@@ -248,30 +234,84 @@ function prepareData() {
 
 function updateSummary() {
   const areas = visibleAreas();
-  const priority = areas.filter((area) => area.tier === "priority").length;
-  const reserve = areas.filter((area) => area.tier === "reserve").length;
-  const routine = areas.filter((area) => area.tier === "routine").length;
-  const authorities = new Set(areas.map((area) => area.ladName).filter(Boolean));
+
+  let priority = 0;
+  let reserve = 0;
+  let routine = 0;
+
+  for (const area of areas) {
+    if (area.tier === "priority") {
+      priority++;
+    } else if (area.tier === "reserve") {
+      reserve++;
+    } else {
+      routine++;
+    }
+  }
 
   els.priorityCount.textContent = formatFloat(priority);
-  els.reserveCount.textContent = formatFloat(reserve);
-  els.routineCount.textContent = formatFloat(routine);
+  els.riskyCount.textContent = formatFloat(reserve);
+  els.standardCount.textContent = formatFloat(routine);
 
   if (isNationalOverview()) {
-    els.zoneCount.textContent = formatFloat(state.authoritySummaries.length);
     els.shownCount.textContent = formatFloat(state.authoritySummaries.length);
-    els.shownLabel.textContent = "Local authority overview";
+    els.shownLabel.textContent = "Local Authority Overview";
   } else {
-    els.zoneCount.textContent = formatFloat(authorities.size);
     els.shownCount.textContent = formatFloat(areas.length);
-    els.shownLabel.textContent = state.ladSelected === "all" ? "Matched LSOAs" : state.ladSelected;
+    els.shownLabel.textContent = state.ladSelected;
   }
+}
+
+function updateMapHeader() {
+  const area = selectedArea();
+  const areas = visibleAreas();
+
+  let population = 0;
+
+  if (area) {
+    population = Number(area.population || 0);
+    els.mapSelectedArea.textContent = area.name;
+    els.mapLevel.textContent = "LSOA";
+  } else {
+    for (const item of areas) {
+      population += Number(item.population || 0);
+    }
+
+    if (isNationalOverview()) {
+      els.mapSelectedArea.textContent = "UK Overview";
+      els.mapLevel.textContent = "Local Authority";
+    } else {
+      els.mapSelectedArea.textContent = state.ladSelected;
+      els.mapLevel.textContent = "LSOA";
+    }
+  }
+
+  els.mapPopulation.textContent = formatFloat(population, 0);
+}
+
+function updateContextProfile() {
+  let areas = visibleAreas();
+  const selected = selectedArea();
+
+  if (selected) {
+    areas = [selected];
+  }
+
+  els.contextTitle.textContent = "Deprivation Context";
+  els.contextHint.textContent = "Higher values mean stronger pressure.";
+
+  els.contextProfile.innerHTML = [
+    contextRow("Overall deprivation", Math.round(weightedAverageByDemand(areas, "imdDecile"))),
+    contextRow("Income", Math.round(weightedAverageByDemand(areas, "incomeDecile"))),
+    contextRow("Employment", Math.round(weightedAverageByDemand(areas, "employmentDecile"))),
+    contextRow("Education", Math.round(weightedAverageByDemand(areas, "educationDecile"))),
+  ].join("");
 }
 
 function initMap() {
   if (!window.L) {
     els.allocationMap.innerHTML =
-      '<div class="map-fallback">Interactive map tiles need an internet connection. The data and review list still load below.</div>';
+      '<div class="map-fallback">Interactive map needs an internet connection. The data still loads below.</div>';
     return;
   }
 
@@ -287,47 +327,75 @@ function initMap() {
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   }).addTo(mapState.map);
 
-  L.control.scale({ imperial: false, position: "bottomleft" }).addTo(mapState.map);
+  L.control.scale({
+    imperial: false,
+    position: "bottomleft",
+  }).addTo(mapState.map);
 
   mapState.layer = L.layerGroup().addTo(mapState.map);
 }
 
 function markerStyle(tier, selected = false, score = 1) {
-  const radius = 6 + Math.sqrt(Math.max(0, score)) * 1.8;
+  let radius = 8 + Math.sqrt(Math.max(0, score)) * 1.5;
+
+  if (selected) {
+    radius = Math.min(radius + 2, 28);
+  } else {
+    radius = Math.min(radius, 24);
+  }
+
+  let borderColor = "#ffffff";
+  let borderWidth = 1;
+  let fillOpacity = 0.65;
+
+  if (selected) {
+    borderColor = "#102025";
+    borderWidth = 3;
+    fillOpacity = 0.95;
+  }
 
   return {
-    radius: selected ? Math.min(radius + 3, 28) : Math.min(radius, 24),
-    color: selected ? "#102025" : "#ffffff",
-    weight: selected ? 3 : 1,
+    radius,
+    color: borderColor,
+    weight: borderWidth,
     opacity: 1,
     fillColor: tierColor(tier),
-    fillOpacity: selected ? 0.95 : 0.65,
+    fillOpacity,
   };
 }
 
 function fitMap(points, maxZoom) {
-  if (!mapState.map || !points.length) return;
+  if (!mapState.map || points.length === 0) {
+    return;
+  }
 
-  const validPoints = points.filter(
-    (point) => Number.isFinite(point[0]) && Number.isFinite(point[1])
-  );
+  const validPoints = points.filter((point) => {
+    return Number.isFinite(point[0]) && Number.isFinite(point[1]);
+  });
 
-  if (!validPoints.length) return;
+  if (validPoints.length === 0) {
+    return;
+  }
 
-  mapState.map.fitBounds(L.latLngBounds(validPoints).pad(0.15), { maxZoom });
+  mapState.map.fitBounds(L.latLngBounds(validPoints).pad(0.15), {
+    maxZoom,
+  });
 }
 
-function renderNationalMap() {
-  if (!mapState.map || !mapState.layer) return;
+function renderLADMap() {
+  if (!mapState.map || !mapState.layer) {
+    return;
+  }
 
-  els.mapTitle.textContent = "UK review overview";
   els.mapDescription.textContent =
-    "Each circle is a local authority. Size and colour are based on the Model LSOA predictions inside that authority.";
+    "Select a local authority to inspect LSOA level review points.";
 
   mapState.layer.clearLayers();
 
-  state.authoritySummaries.forEach((summary) => {
-    if (!Number.isFinite(summary.latitude) || !Number.isFinite(summary.longitude)) return;
+  for (const summary of state.authoritySummaries) {
+    if (!Number.isFinite(summary.latitude) || !Number.isFinite(summary.longitude)) {
+      continue;
+    }
 
     const selected = state.ladSelected === summary.name;
     const score = Math.max(1, summary.priorityCount + summary.reserveCount);
@@ -339,7 +407,7 @@ function renderNationalMap() {
 
     marker.bindTooltip(
       `<strong>${summary.name}</strong><br>
-       Predicted crime: ${formatFloat(summary.demand, 0)}<br>
+       Predicted Crime: ${formatFloat(Math.round(summary.demand / 100) * 100, 0)}<br>
        Priority LSOAs: ${formatFloat(summary.priorityCount)}<br>
        Reserve LSOAs: ${formatFloat(summary.reserveCount)}`,
       { sticky: true }
@@ -354,36 +422,39 @@ function renderNationalMap() {
     });
 
     marker.addTo(mapState.layer);
-  });
+  }
 
   if (mapState.needsFit) {
-    fitMap(
-      state.authoritySummaries.map((summary) => [summary.latitude, summary.longitude]),
-      6
-    );
+    const coordinates = [];
+
+    for (const summary of state.authoritySummaries) {
+      coordinates.push([summary.latitude, summary.longitude]);
+    }
+
+    fitMap(coordinates, 6);
     mapState.needsFit = false;
   }
 }
 
-function renderLsoaMap() {
-  if (!mapState.map || !mapState.layer) return;
+function renderLSOAMap() {
+  if (!mapState.map || !mapState.layer) {
+    return;
+  }
 
   const areas = visibleAreas();
 
-  els.mapTitle.textContent =
-    state.ladSelected === "all"
-      ? "LSOA review results"
-      : `${state.ladSelected} LSOA review`;
-
   els.mapDescription.textContent =
-    "Each point is an LSOA. Red, yellow and blue are based on the predicted crime count.";
+    "Each point is an LSOA. Colours are based on the predicted crime count.";
 
   mapState.layer.clearLayers();
 
-  areas.forEach((area) => {
-    if (!Number.isFinite(area.latitude) || !Number.isFinite(area.longitude)) return;
+  for (const area of areas) {
+    if (!Number.isFinite(area.latitude) || !Number.isFinite(area.longitude)) {
+      continue;
+    }
 
     const selected = area.lsoaCode === state.selectedCode;
+
     const marker = L.circleMarker(
       [area.latitude, area.longitude],
       markerStyle(area.tier, selected, area.demandRank)
@@ -391,193 +462,47 @@ function renderLsoaMap() {
 
     marker.bindTooltip(
       `<strong>${area.name}</strong><br>
-       ${tierText[area.tier]}<br>
-       Predicted crime count: ${formatFloat(area.predictedDemand, 1)}<br>
-       LSOA share of LAD: ${formatPercent(area.lsoaShare, 2)}`,
+      ${tierText[area.tier]}<br>
+      Predicted crime count: ${formatFloat(area.predictedDemand, 1)}<br>
+      LSOA share of LAD: ${formatPercent(area.lsoaShare, 2)}<br>
+      Recent serious crime share: ${formatPercent(area.highHarmShare, 1)}`,
       { sticky: true }
     );
 
     marker.on("click", () => {
       state.selectedCode = area.lsoaCode;
-      renderMap();
-      renderSelectedArea();
+      mapState.needsFit = false;
+      renderAll();
     });
 
     marker.addTo(mapState.layer);
-  });
+  }
 
   if (mapState.needsFit) {
-    fitMap(
-      areas.map((area) => [area.latitude, area.longitude]),
-      state.ladSelected === "all" ? 7 : 12
-    );
+    const coordinates = [];
+
+    for (const area of areas) {
+      coordinates.push([area.latitude, area.longitude]);
+    }
+
+    let maxZoom = 12;
+
+    if (state.ladSelected === "all") {
+      maxZoom = 7;
+    }
+
+    fitMap(coordinates, maxZoom);
+
     mapState.needsFit = false;
   }
 }
 
 function renderMap() {
   if (isNationalOverview()) {
-    renderNationalMap();
+    renderLADMap();
   } else {
-    renderLsoaMap();
+    renderLSOAMap();
   }
-}
-
-function mainReasons(area) {
-  const reasons = [];
-
-  if (area.tier === "priority") reasons.push("high predicted crime count");
-  if (area.tier === "reserve") reasons.push("above-average predicted crime count");
-  if (area.lsoaShare > 0.01) reasons.push("larger share of predicted LAD crime");
-  if (area.highHarmShare >= 0.4) reasons.push("higher recent serious-crime share");
-
-  if (Number(area.educationDecile) > 0 && Number(area.educationDecile) <= 2) {
-    reasons.push("education pressure shown in IoD context");
-  }
-
-  if (
-    (Number(area.incomeDecile) > 0 && Number(area.incomeDecile) <= 2) ||
-    (Number(area.employmentDecile) > 0 && Number(area.employmentDecile) <= 2)
-  ) {
-    reasons.push("economic pressure shown in IoD context");
-  }
-
-  return reasons;
-}
-
-function renderNationalPanel() {
-  const topAuthorities = state.authoritySummaries
-    .slice(0, 3)
-    .map((summary) => summary.name)
-    .join(", ");
-
-  els.panelEyebrow.textContent = "National overview";
-  els.areaName.textContent = "Start with the UK pattern";
-  els.areaMeta.textContent = `${formatFloat(state.authoritySummaries.length)} local authorities, ${formatFloat(state.areas.length)} LSOAs`;
-  els.areaTier.textContent = "Overview";
-  els.areaTier.className = "tier-badge tier-zone";
-
-  els.metricOneLabel.textContent = "Total predicted crime";
-  els.metricTwoLabel.textContent = "Priority LSOAs";
-  els.metricThreeLabel.textContent = "Reserve LSOAs";
-  els.metricFourLabel.textContent = "Areas shown";
-
-  els.areaDemand.textContent = formatFloat(sum(state.areas, (area) => area.predictedDemand), 0);
-  els.areaUplift.textContent = formatFloat(state.areas.filter((area) => area.tier === "priority").length);
-  els.areaHarm.textContent = formatFloat(state.areas.filter((area) => area.tier === "reserve").length);
-  els.areaContext.textContent = formatFloat(state.authoritySummaries.length);
-
-  els.contextTitle.textContent = "How to read this view";
-  els.contextHint.textContent =
-    "The national view groups LSOAs by local authority so the map is not overcrowded.";
-
-  els.detailOneLabel.textContent = "Top predicted areas";
-  els.detailTwoLabel.textContent = "Map level";
-  els.areaPopulation.textContent = topAuthorities || "-";
-  els.areaRepeat.textContent = "Local authority";
-
-  els.contextProfile.innerHTML = [
-    `<div class="read-step"><b>1. LAD model</b><span>The regression estimates crime at LAD level.</span></div>`,
-    `<div class="read-step"><b>2. LSOA allocation</b><span>The LAD prediction is split using LSOA share weights.</span></div>`,
-    `<div class="read-step"><b>3. IoD context</b><span>IoD is shown for interpretation, not used to change the ranking.</span></div>`,
-  ].join("");
-
-  els.areaReason.textContent =
-    "This overview shows where the model predicts the highest crime counts. Click a local authority to inspect its LSOA-level results.";
-}
-
-function renderAuthorityPanel(summary) {
-  if (!summary) {
-    renderNationalPanel();
-    return;
-  }
-
-  els.panelEyebrow.textContent = "Selected local authority";
-  els.areaName.textContent = summary.name;
-  els.areaMeta.textContent = `${formatFloat(summary.members.length)} LSOAs`;
-  els.areaTier.textContent = tierText[summary.tier];
-  els.areaTier.className = `tier-badge ${tierClass(summary.tier)}`;
-
-  els.metricOneLabel.textContent = "Predicted crime";
-  els.metricTwoLabel.textContent = "Priority LSOAs";
-  els.metricThreeLabel.textContent = "Reserve LSOAs";
-  els.metricFourLabel.textContent = "Population";
-
-  els.areaDemand.textContent = formatFloat(summary.demand, 0);
-  els.areaUplift.textContent = formatFloat(summary.priorityCount);
-  els.areaHarm.textContent = formatFloat(summary.reserveCount);
-  els.areaContext.textContent = summary.population ? formatFloat(summary.population) : "No match";
-
-  els.contextTitle.textContent = "IoD context profile";
-  els.contextHint.textContent = "Demand-weighted average deciles. Lower values mean stronger pressure.";
-
-  els.detailOneLabel.textContent = "Map level";
-  els.detailTwoLabel.textContent = "Routine LSOAs";
-  els.areaPopulation.textContent = "LSOA detail";
-  els.areaRepeat.textContent = formatFloat(summary.routineCount);
-
-  els.contextProfile.innerHTML = [
-    contextRow("Overall deprivation", Math.round(summary.imdDecile)),
-    contextRow("Income", Math.round(summary.incomeDecile)),
-    contextRow("Employment", Math.round(summary.employmentDecile)),
-    contextRow("Education", Math.round(summary.educationDecile)),
-  ].join("");
-
-  els.areaReason.textContent =
-    `${summary.name} contains ${formatFloat(summary.priorityCount)} priority LSOAs and ${formatFloat(summary.reserveCount)} reserve-watch LSOAs according to the model prediction output.`;
-}
-
-function renderSelectedArea() {
-  const area = selectedArea();
-
-  if (!area) {
-    if (state.ladSelected !== "all") {
-      renderAuthorityPanel(selectedAuthoritySummary());
-    } else {
-      renderNationalPanel();
-    }
-    return;
-  }
-
-  const pressure = contextPressure(area);
-  const pressureText = pressure >= 0.65 ? "High" : pressure >= 0.4 ? "Medium" : "Lower";
-  const reasons = mainReasons(area);
-
-  els.panelEyebrow.textContent = "Selected LSOA";
-  els.areaName.textContent = area.name;
-  els.areaMeta.textContent = `${area.ladName} - ${area.lsoaCode}`;
-  els.areaTier.textContent = tierText[area.tier];
-  els.areaTier.className = `tier-badge ${tierClass(area.tier)}`;
-
-  els.metricOneLabel.textContent = "Predicted crime count";
-  els.metricTwoLabel.textContent = "LSOA share of LAD";
-  els.metricThreeLabel.textContent = "Recent serious-crime share";
-  els.metricFourLabel.textContent = "IoD context";
-
-  els.areaDemand.textContent = formatFloat(area.predictedDemand, 1);
-  els.areaUplift.textContent = formatPercent(area.lsoaShare, 2);
-  els.areaHarm.textContent = formatPercent(area.highHarmShare);
-  els.areaContext.textContent = pressureText;
-
-  els.contextTitle.textContent = "IoD context profile";
-  els.contextHint.textContent =
-    "These values are shown for interpretation only. They do not change the ranking.";
-
-  els.detailOneLabel.textContent = "Population";
-  els.detailTwoLabel.textContent = "Recent demand";
-  els.areaPopulation.textContent = area.population ? formatFloat(area.population) : "No match";
-  els.areaRepeat.textContent = formatFloat(area.recentDemand, 0);
-
-  els.contextProfile.innerHTML = [
-    contextRow("Overall deprivation", area.imdDecile),
-    contextRow("Income", area.incomeDecile),
-    contextRow("Employment", area.employmentDecile),
-    contextRow("Education", area.educationDecile),
-  ].join("");
-
-  els.areaReason.textContent = reasons.length
-    ? `This area is marked because of ${reasons.join(", ")}. It should be reviewed with local knowledge before any operational decision.`
-    : "This area is not currently highlighted for extra review. It still requires routine policing coverage.";
 }
 
 function renderRanking() {
@@ -593,7 +518,6 @@ function renderRanking() {
             <strong>${summary.name}</strong>
             <small>${formatFloat(summary.priorityCount)} priority, ${formatFloat(summary.reserveCount)} reserve</small>
           </span>
-          <span class="rank-score">${formatFloat(summary.demand, 0)}</span>
         </button>
       `
       )
@@ -626,7 +550,6 @@ function renderRanking() {
           <strong>${area.name}</strong>
           <small>${area.ladName} - ${tierText[area.tier]}</small>
         </span>
-        <span class="rank-score">${formatFloat(area.predictedDemand, 0)}</span>
       </button>
     `
     )
@@ -645,19 +568,17 @@ function downloadList() {
   const header = [
     "LSOA code",
     "LSOA name",
-    "Local authority",
+    "LAD name",
     "LAD code",
     "Review tier",
     "Predicted crime count",
     "LSOA share of LAD",
-    "Allocated capacity",
-    "Recent serious-crime share",
+    "Recent serious crime share",
     "Population",
     "IMD decile",
     "Income decile",
     "Employment decile",
     "Education decile",
-    "Main reasons",
   ];
 
   const rows = state.areas.map((area) => [
@@ -666,28 +587,29 @@ function downloadList() {
     area.ladName,
     area.ladCode,
     tierText[area.tier],
-    area.predictedDemand,
+    Math.round(area.predictedDemand / 10) * 10,,
     area.lsoaShare,
-    area.allocatedCapacity,
     area.highHarmShare,
     area.population,
     area.imdDecile,
     area.incomeDecile,
     area.employmentDecile,
     area.educationDecile,
-    mainReasons(area).join("; "),
   ]);
 
   const csv = [header, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
     .join("\n");
 
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const blob = new Blob([csv], {
+    type: "text/csv;charset=utf-8",
+  });
+
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 
   link.href = url;
-  link.download = `ssa7-police-review-${state.ladSelected}.csv`;
+  link.download = `police-dashboard-review-${state.ladSelected}.csv`;
   link.click();
 
   URL.revokeObjectURL(url);
@@ -695,20 +617,27 @@ function downloadList() {
 
 function renderAll() {
   updateSummary();
+  updateMapHeader();
   renderMap();
-  renderSelectedArea();
+  updateContextProfile();
   renderRanking();
 }
 
 function init() {
   prepareData();
 
-  els.forceName.textContent = dashboardData.meta.force;
+  els.dataFrom.textContent = dashboardData.meta.dataFrom;
   els.forecastMonth.textContent = `Forecast: ${dashboardData.meta.forecastMonth}`;
 
   els.authoritySelect.innerHTML = [
-    '<option value="all">All local authorities</option>',
-    ...state.authoritySummaries.map((summary) => `<option value="${summary.name}">${summary.name}</option>`),
+    '<option value="all">All Local Authorities</option>',
+    ...state.authoritySummaries
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(
+        (summary) =>
+          `<option value="${summary.name}">${summary.name}</option>`
+      ),
   ].join("");
 
   els.authoritySelect.addEventListener("change", (event) => {
@@ -721,7 +650,13 @@ function init() {
   els.searchInput.addEventListener("input", (event) => {
     state.search = event.target.value;
     const matches = visibleAreas();
-    state.selectedCode = state.search.trim() && matches.length ? matches[0].lsoaCode : null;
+
+    if (state.search.trim() && matches.length > 0) {
+      state.selectedCode = matches[0].lsoaCode;
+    } else {
+      state.selectedCode = null;
+    }
+
     mapState.needsFit = true;
     renderAll();
   });
@@ -729,7 +664,9 @@ function init() {
   els.downloadButton.addEventListener("click", downloadList);
 
   window.addEventListener("resize", () => {
-    if (mapState.map) mapState.map.invalidateSize();
+    if (mapState.map) {
+      mapState.map.invalidateSize();
+    }
   });
 
   initMap();
