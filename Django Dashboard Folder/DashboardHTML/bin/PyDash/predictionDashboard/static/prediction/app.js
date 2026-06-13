@@ -1,5 +1,6 @@
 const dashboardData = window.DASHBOARDDATA;
 
+// Dashboard state
 const state = {
   ladSelected: "all",
   search: "",
@@ -8,25 +9,23 @@ const state = {
   authoritySummaries: [],
 };
 
+// HTML Elements
 const els = {
   dataFrom: document.getElementById("dataFrom"),
   forecastMonth: document.getElementById("forecastMonth"),
   authoritySelect: document.getElementById("authoritySelect"),
   searchInput: document.getElementById("searchInput"),
   downloadButton: document.getElementById("downloadButton"),
-
   priorityCount: document.getElementById("priorityCount"),
   riskyCount: document.getElementById("reserveCount"),
   standardCount: document.getElementById("routineCount"),
   shownCount: document.getElementById("shownCount"),
   shownLabel: document.getElementById("shownLabel"),
-
   allocationMap: document.getElementById("allocationMap"),
   mapDescription: document.getElementById("mapDescription"),
   mapSelectedArea: document.getElementById("mapSelectedArea"),
   mapLevel: document.getElementById("mapLevel"),
   mapPopulation: document.getElementById("mapPopulation"),
-
   contextTitle: document.getElementById("contextTitle"),
   contextHint: document.getElementById("contextHint"),
   contextProfile: document.getElementById("contextProfile"),
@@ -34,18 +33,21 @@ const els = {
   rankingList: document.getElementById("rankingList"),
 };
 
+// State of Leaflet Map
 const mapState = {
   map: null,
   layer: null,
   needsFit: true,
 };
 
+// Tiers of patrol for addressing what police should do in LSOA/LAD's
 const tierText = {
   priority: "Priority Patrol",
   reserve: "Risk Addressing Patrol",
   routine: "Standard Patrol",
 };
 
+// Formats numbers for ease of reading (12495 -> 12,495)
 function formatFloat(value, decimals = 0) {
   return Number(value || 0).toLocaleString("en-GB", {
     minimumFractionDigits: decimals,
@@ -53,10 +55,12 @@ function formatFloat(value, decimals = 0) {
   });
 }
 
+// Converts decimals to percentage (0.25 -> 25%)
 function formatPercent(value, decimals = 1) {
   return `${formatFloat(Number(value || 0) * 100, decimals)}%`;
 }
 
+// Weighted average for classifyingLAD demand summary
 function weightedAverageByDemand(items, columnName) {
   let weightedTotal = 0;
   let totalWeight = 0;
@@ -78,12 +82,14 @@ function weightedAverageByDemand(items, columnName) {
   return weightedTotal / totalWeight;
 }
 
+// Sets color of nodes on the map
 function tierColor(tier) {
   if (tier === "priority") return "#b71c1c";
   if (tier === "reserve") return "#ef6c00";
   return "#1565c0";
 }
 
+// Gets the tier of the node from the model output
 function tierFromModel(area) {
   const tier = String(area.originalTier || "").toLowerCase();
 
@@ -92,6 +98,7 @@ function tierFromModel(area) {
   return "routine";
 }
 
+// Creates a row for deprivation
 function contextRow(label, decile) {
   const cleanDecile = Number(decile || 0);
   const pressure = cleanDecile ? 11 - cleanDecile : 0;
@@ -110,6 +117,7 @@ function contextRow(label, decile) {
   `;
 }
 
+// Returns the nodes matching the selected overview (national or LAD)
 function visibleAreas() {
   let areas = [];
 
@@ -138,10 +146,12 @@ function visibleAreas() {
   return searchedAreas;
 }
 
+// Checks if the overview is national (or of a specific LAD)
 function isNationalOverview() {
   return state.ladSelected === "all" && !state.search.trim();
 }
 
+// Returns selected LSOA
 function selectedArea() {
   if (!state.selectedCode) {
     return null;
@@ -156,7 +166,9 @@ function selectedArea() {
   return null;
 }
 
+// Creates LAD summary from individual LSOAs
 function buildAuthoritySummaries(areas) {
+  // Group LSOAs by LAD name
   const groups = new Map();
 
   for (const area of areas) {
@@ -209,7 +221,7 @@ function buildAuthoritySummaries(areas) {
       reserveCount,
       routineCount,
       tier,
-      latitude: weightedAverageByDemand(members, "latitude"),
+      latitude: weightedAverageByDemand(members, "latitude"), // Calculating LAD point through average of LSOA coordinates
       longitude: weightedAverageByDemand(members, "longitude"),
       imdDecile: weightedAverageByDemand(members, "imdDecile"),
       incomeDecile: weightedAverageByDemand(members, "incomeDecile"),
@@ -221,6 +233,7 @@ function buildAuthoritySummaries(areas) {
   return summaries.sort((a, b) => b.demand - a.demand);
 }
 
+// Converts data into UI friendly visualizations
 function prepareData() {
   state.areas = dashboardData.areas
     .map((area) => ({
@@ -232,6 +245,7 @@ function prepareData() {
   state.authoritySummaries = buildAuthoritySummaries(state.areas);
 }
 
+// Updates the numbers that are above the map
 function updateSummary() {
   const areas = visibleAreas();
 
@@ -262,6 +276,7 @@ function updateSummary() {
   }
 }
 
+// Updates the numbers right above the map (population etc.)
 function updateMapHeader() {
   const area = selectedArea();
   const areas = visibleAreas();
@@ -289,6 +304,7 @@ function updateMapHeader() {
   els.mapPopulation.textContent = formatFloat(population, 0);
 }
 
+// Updates deprivation data below the map
 function updateContextProfile() {
   let areas = visibleAreas();
   const selected = selectedArea();
@@ -308,6 +324,7 @@ function updateContextProfile() {
   ].join("");
 }
 
+// Creates Leaflet Map
 function initMap() {
   if (!window.L) {
     els.allocationMap.innerHTML =
@@ -335,6 +352,7 @@ function initMap() {
   mapState.layer = L.layerGroup().addTo(mapState.map);
 }
 
+// Sets the node styling based on the crime model
 function markerStyle(tier, selected = false, score = 1) {
   let radius = 8 + Math.sqrt(Math.max(0, score)) * 1.5;
 
@@ -364,6 +382,7 @@ function markerStyle(tier, selected = false, score = 1) {
   };
 }
 
+// Fits map according to the node placements
 function fitMap(points, maxZoom) {
   if (!mapState.map || points.length === 0) {
     return;
@@ -382,6 +401,7 @@ function fitMap(points, maxZoom) {
   });
 }
 
+// Renders nodes of LADs into the map
 function renderLADMap() {
   if (!mapState.map || !mapState.layer) {
     return;
@@ -399,7 +419,7 @@ function renderLADMap() {
 
     const selected = state.ladSelected === summary.name;
     const score = Math.max(1, summary.priorityCount + summary.reserveCount);
-
+    // Bases marker size according to the number of priority and risky nodes
     const marker = L.circleMarker(
       [summary.latitude, summary.longitude],
       markerStyle(summary.tier, selected, score)
@@ -436,6 +456,7 @@ function renderLADMap() {
   }
 }
 
+// Renders nodes of LSOAs into the map (of the specific LAD)
 function renderLSOAMap() {
   if (!mapState.map || !mapState.layer) {
     return;
@@ -497,6 +518,7 @@ function renderLSOAMap() {
   }
 }
 
+// Check which map is visualized
 function renderMap() {
   if (isNationalOverview()) {
     renderLADMap();
@@ -505,6 +527,7 @@ function renderMap() {
   }
 }
 
+// Render the review list 
 function renderRanking() {
   if (isNationalOverview()) {
     const rows = state.authoritySummaries.slice(0, 14);
@@ -564,6 +587,7 @@ function renderRanking() {
   });
 }
 
+// Export current area info as a csv
 function downloadList() {
   const header = [
     "LSOA code",
@@ -597,13 +621,10 @@ function downloadList() {
     area.educationDecile,
   ]);
 
-  const csv = [header, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
-    .join("\n");
+  // Converts data into csv format
+  const csv = [header, ...rows].map((row) => row.join(",")).join("\n");
 
-  const blob = new Blob([csv], {
-    type: "text/csv;charset=utf-8",
-  });
+  const blob = new Blob([csv], {type: "text/csv;charset=utf-8",});
 
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -615,6 +636,7 @@ function downloadList() {
   URL.revokeObjectURL(url);
 }
 
+// Refresh all dashboard data
 function renderAll() {
   updateSummary();
   updateMapHeader();
@@ -623,6 +645,7 @@ function renderAll() {
   renderRanking();
 }
 
+// Start dashboard
 function init() {
   prepareData();
 
