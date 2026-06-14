@@ -10,7 +10,7 @@ const state = {
 };
 
 // HTML Elements
-const els = {
+const elements = {
   dataFrom: document.getElementById("dataFrom"),
   forecastMonth: document.getElementById("forecastMonth"),
   authoritySelect: document.getElementById("authoritySelect"),
@@ -263,16 +263,16 @@ function updateSummary() {
     }
   }
 
-  els.priorityCount.textContent = formatFloat(priority);
-  els.riskyCount.textContent = formatFloat(reserve);
-  els.standardCount.textContent = formatFloat(routine);
+  elements.priorityCount.textContent = formatFloat(priority);
+  elements.riskyCount.textContent = formatFloat(reserve);
+  elements.standardCount.textContent = formatFloat(routine);
 
   if (isNationalOverview()) {
-    els.shownCount.textContent = formatFloat(state.authoritySummaries.length);
-    els.shownLabel.textContent = "Local Authority Overview";
+    elements.shownCount.textContent = formatFloat(state.authoritySummaries.length);
+    elements.shownLabel.textContent = "Local Authority Overview";
   } else {
-    els.shownCount.textContent = formatFloat(areas.length);
-    els.shownLabel.textContent = state.ladSelected;
+    elements.shownCount.textContent = formatFloat(areas.length);
+    elements.shownLabel.textContent = state.ladSelected;
   }
 }
 
@@ -285,23 +285,23 @@ function updateMapHeader() {
 
   if (area) {
     population = Number(area.population || 0);
-    els.mapSelectedArea.textContent = area.name;
-    els.mapLevel.textContent = "LSOA";
+    elements.mapSelectedArea.textContent = area.name;
+    elements.mapLevel.textContent = "LSOA";
   } else {
     for (const item of areas) {
       population += Number(item.population || 0);
     }
 
     if (isNationalOverview()) {
-      els.mapSelectedArea.textContent = "UK Overview";
-      els.mapLevel.textContent = "Local Authority";
+      elements.mapSelectedArea.textContent = "UK Overview";
+      elements.mapLevel.textContent = "Local Authority";
     } else {
-      els.mapSelectedArea.textContent = state.ladSelected;
-      els.mapLevel.textContent = "LSOA";
+      elements.mapSelectedArea.textContent = state.ladSelected;
+      elements.mapLevel.textContent = "LSOA";
     }
   }
 
-  els.mapPopulation.textContent = formatFloat(population, 0);
+  elements.mapPopulation.textContent = formatFloat(population, 0);
 }
 
 // Updates deprivation data below the map
@@ -313,10 +313,10 @@ function updateContextProfile() {
     areas = [selected];
   }
 
-  els.contextTitle.textContent = "Deprivation Context";
-  els.contextHint.textContent = "Higher values mean stronger pressure.";
+  elements.contextTitle.textContent = "Deprivation Context";
+  elements.contextHint.textContent = "Higher values mean stronger pressure.";
 
-  els.contextProfile.innerHTML = [
+  elements.contextProfile.innerHTML = [
     contextRow("Overall deprivation", Math.round(weightedAverageByDemand(areas, "imdDecile"))),
     contextRow("Income", Math.round(weightedAverageByDemand(areas, "incomeDecile"))),
     contextRow("Employment", Math.round(weightedAverageByDemand(areas, "employmentDecile"))),
@@ -327,12 +327,12 @@ function updateContextProfile() {
 // Creates Leaflet Map
 function initMap() {
   if (!window.L) {
-    els.allocationMap.innerHTML =
+    elements.allocationMap.innerHTML =
       '<div class="map-fallback">Interactive map needs an internet connection. The data still loads below.</div>';
     return;
   }
 
-  mapState.map = L.map(els.allocationMap, {
+  mapState.map = L.map(elements.allocationMap, {
     preferCanvas: true,
     zoomControl: true,
     scrollWheelZoom: true,
@@ -407,7 +407,7 @@ function renderLADMap() {
     return;
   }
 
-  els.mapDescription.textContent =
+  elements.mapDescription.textContent =
     "Select a local authority to inspect LSOA level review points.";
 
   mapState.layer.clearLayers();
@@ -436,7 +436,7 @@ function renderLADMap() {
     marker.on("click", () => {
       state.ladSelected = summary.name;
       state.selectedCode = null;
-      els.authoritySelect.value = summary.name;
+      elements.authoritySelect.value = summary.name;
       mapState.needsFit = true;
       renderAll();
     });
@@ -464,7 +464,7 @@ function renderLSOAMap() {
 
   const areas = visibleAreas();
 
-  els.mapDescription.textContent =
+  elements.mapDescription.textContent =
     "Each point is an LSOA. Colours are based on the predicted crime count.";
 
   mapState.layer.clearLayers();
@@ -532,7 +532,7 @@ function renderRanking() {
   if (isNationalOverview()) {
     const rows = state.authoritySummaries.slice(0, 14);
 
-    els.rankingList.innerHTML = rows
+    elements.rankingList.innerHTML = rows
       .map(
         (summary, index) => `
         <button type="button" class="rank-row" data-authority="${summary.name}">
@@ -546,10 +546,10 @@ function renderRanking() {
       )
       .join("");
 
-    els.rankingList.querySelectorAll("button").forEach((button) => {
+    elements.rankingList.querySelectorAll("button").forEach((button) => {
       button.addEventListener("click", () => {
         state.ladSelected = button.dataset.authority;
-        els.authoritySelect.value = state.ladSelected;
+        elements.authoritySelect.value = state.ladSelected;
         state.selectedCode = null;
         mapState.needsFit = true;
         renderAll();
@@ -564,7 +564,7 @@ function renderRanking() {
     .sort((a, b) => b.predictedDemand - a.predictedDemand)
     .slice(0, 14);
 
-  els.rankingList.innerHTML = rows
+  elements.rankingList.innerHTML = rows
     .map(
       (area, index) => `
       <button type="button" class="rank-row" data-code="${area.lsoaCode}">
@@ -578,7 +578,7 @@ function renderRanking() {
     )
     .join("");
 
-  els.rankingList.querySelectorAll("button").forEach((button) => {
+  elements.rankingList.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       state.selectedCode = button.dataset.code;
       mapState.needsFit = false;
@@ -649,10 +649,10 @@ function renderAll() {
 function init() {
   prepareData();
 
-  els.dataFrom.textContent = dashboardData.meta.dataFrom;
-  els.forecastMonth.textContent = `Forecast: ${dashboardData.meta.forecastMonth}`;
+  elements.dataFrom.textContent = dashboardData.meta.dataFrom;
+  elements.forecastMonth.textContent = `Forecast: ${dashboardData.meta.forecastMonth}`;
 
-  els.authoritySelect.innerHTML = [
+  elements.authoritySelect.innerHTML = [
     '<option value="all">All Local Authorities</option>',
     ...state.authoritySummaries
       .slice()
@@ -663,14 +663,14 @@ function init() {
       ),
   ].join("");
 
-  els.authoritySelect.addEventListener("change", (event) => {
+  elements.authoritySelect.addEventListener("change", (event) => {
     state.ladSelected = event.target.value;
     state.selectedCode = null;
     mapState.needsFit = true;
     renderAll();
   });
 
-  els.searchInput.addEventListener("input", (event) => {
+  elements.searchInput.addEventListener("input", (event) => {
     state.search = event.target.value;
     const matches = visibleAreas();
 
@@ -684,7 +684,7 @@ function init() {
     renderAll();
   });
 
-  els.downloadButton.addEventListener("click", downloadList);
+  elements.downloadButton.addEventListener("click", downloadList);
 
   window.addEventListener("resize", () => {
     if (mapState.map) {
