@@ -35,6 +35,12 @@ def readCrimeData(path):
 
     # Recursively add file data to a variable while outputing the ones that have been scanned
     files = glob.glob(str(path / "**/*.csv"), recursive=True)
+    if not files:
+        raise FileNotFoundError(
+            "No police.uk crime CSV files were found under "
+            f"{path}. Download the police.uk data archive and place the extracted CSV files there."
+        )
+
     data = []
     for number, filepath in enumerate(sorted(files), start=1):
         print(f"[{number}/{len(files)}] reading {Path(filepath).name}")
@@ -227,11 +233,14 @@ def JSDataConversion(crimeSummary, context, forecast):
 
 # Creates the outputs, including the payload and the dashboard forecast csv
 def write_outputs(payload, forecast):
-    forecast.to_csv(dashboardFolder / "output/dashboardForecast.csv", index=False)
+    outputFolder = dashboardFolder / "output"
+    outputFolder.mkdir(parents=True, exist_ok=True)
+    forecast.to_csv(outputFolder / "dashboardForecast.csv", index=False)
 
     dashboardOutputFolder.mkdir(parents=True, exist_ok=True)
 
-    with open(dashboardOutputFolder / "dashboardData.js", "w", encoding="utf-8") as file:
+    dashboardDataFile = dashboardOutputFolder / "dashboardData.js"
+    with open(dashboardDataFile, "w", encoding="utf-8") as file:
         file.write("window.DASHBOARDDATA = ")
         json.dump(payload, file, ensure_ascii=False, separators=(",", ":"))
         file.write(";")
@@ -257,7 +266,8 @@ def main():
 
     print(json.dumps({
         "areas": len(package["areas"]),
-        "dashboardFile": str(dataFolder / "dashboardData.js"),
+        "dashboardFile": str(dashboardOutputFolder / "dashboardData.js"),
+        "forecastCsv": str(dashboardFolder / "output/dashboardForecast.csv"),
     }, indent=2))
 
 

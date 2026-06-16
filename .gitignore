@@ -1,6 +1,18 @@
-# Created by venv; see https://docs.python.org/3/library/venv.html
-*.csv
+# Local Python/runtime files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
 
+# Large or generated CSV files are not committed by default.
+# The two small source CSVs below are part of the reproducible dashboard inputs.
+*.csv
 !persistentabsence.csv
 !PopulationDeprivationIndex.csv
+
+# External/manual download. See README.md.
 #!LSOALAD.csv
+
+# Generated during the dashboard data build.
+Dashboard Data Creation Folder/output/

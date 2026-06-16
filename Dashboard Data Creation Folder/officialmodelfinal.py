@@ -90,6 +90,13 @@ incomeData["IQR"] = incomeData["Q3"] - incomeData["Q1"]
 
 filesCrime = glob.glob(str(dashboardDataFolder / "data/CrimeData/**/*.csv"), recursive=True)
 
+if not filesCrime:
+    raise FileNotFoundError(
+        "No police.uk crime CSV files were found under "
+        f"{dashboardDataFolder / 'data/CrimeData'}. "
+        "Download the police.uk data archive and place the extracted CSV files there."
+    )
+
 dfs = []
 
 for file in filesCrime:
@@ -107,7 +114,14 @@ crimeData = crimeData[["LSOA", "Crime type", "Year"]]
 
 crimeByLSOA = crimeData.groupby(["LSOA", "Year"]).size().reset_index(name="Crime Count")
 
-lsoalad = pd.read_csv(dashboardDataFolder / "data/ModelData/LSOALAD.csv", low_memory=False)
+lsoaLadFile = dashboardDataFolder / "data/ModelData/LSOALAD.csv"
+if not lsoaLadFile.exists():
+    raise FileNotFoundError(
+        "Missing LSOALAD.csv. Download the LSOA to LAD lookup from the ONS Geoportal "
+        "and place it in Dashboard Data Creation Folder/data/ModelData/LSOALAD.csv."
+    )
+
+lsoalad = pd.read_csv(lsoaLadFile, low_memory=False)
 lsoalad = lsoalad[["lsoa21cd", "ladcd"]].drop_duplicates()
 
 crimeByLAD = crimeByLSOA.merge(lsoalad, left_on="LSOA", right_on="lsoa21cd")

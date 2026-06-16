@@ -611,7 +611,7 @@ function downloadList() {
     area.ladName,
     area.ladCode,
     tierText[area.tier],
-    Math.round(area.predictedDemand / 10) * 10,,
+    Math.round(area.predictedDemand / 10) * 10,
     area.lsoaShare,
     area.highHarmShare,
     area.population,
