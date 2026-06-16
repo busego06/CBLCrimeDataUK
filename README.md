@@ -105,7 +105,7 @@ Most model input files are already included under:
 Dashboard Data Creation Folder/data/ModelData/
 ```
 
-Two data sources are too large and unsuitable to keep directly in GitHub, which need to download manually:
+Two data sources are too large or unsuitable to keep directly in GitHub and must be downloaded manually:
 
 #### A. police.uk recorded crime CSV files
 
@@ -113,6 +113,13 @@ Download the police.uk open data files from:
 
 ```text
 https://data.police.uk/data/
+```
+
+Use the following download settings:
+
+```text
+Date range: January 2024 to December 2025
+Forces: All forces
 ```
 
 Extract the downloaded files and place the crime CSV files anywhere under:
