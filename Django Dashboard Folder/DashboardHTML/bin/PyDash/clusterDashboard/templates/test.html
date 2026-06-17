@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Police Demand Review Map</title>
+    <title>Police area clustering</title>
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -29,40 +29,6 @@
     </header>
 
     <main>
-      <section class="controls" aria-label="Map controls">
-        <label>
-          View area
-          <select id="authoritySelect"></select>
-        </label>
-        <label>
-          Search
-          <input id="searchInput" type="search" placeholder="Search Birmingham, Coventry, E010..." />
-        </label>
-        <button id="downloadButton" type="button">Download review list</button>
-      </section>
-
-      <section class="summary-grid" aria-label="Map summary">
-        <article>
-          <span>Priority review</span>
-          <strong id="priorityCount">-</strong>
-          <small>Areas to review first</small>
-        </article>
-        <article>
-          <span>Reserve watch</span>
-          <strong id="reserveCount">-</strong>
-          <small>Possible emerging pressure</small>
-        </article>
-        <article>
-          <span>Routine coverage</span>
-          <strong id="routineCount">-</strong>
-          <small>Baseline monthly coverage</small>
-        </article>
-        <article>
-          <span>Areas shown</span>
-          <strong id="shownCount">-</strong>
-          <small id="shownLabel">West Midlands pilot</small>
-        </article>
-      </section>
 
       <section class="map-layout">
         <article class="map-card">
@@ -73,104 +39,15 @@
               <p class="section-note">Drag, zoom, and click an area to inspect its local profile.</p>
             </div>
             <div class="legend">
-              <span><i class="priority-dot"></i>Priority review</span>
-              <span><i class="reserve-dot"></i>Reserve watch</span>
-              <span><i class="routine-dot"></i>Routine coverage</span>
+              <button id="runButton" type="button">Run clustering</button>
+              <span id="runStatus"> Default text</span>
             </div>
           </div>
           <div id="allocationMap" role="img" aria-label="Monthly police demand review map"></div>
           <p class="map-note">
-            Basemap by CARTO using OpenStreetMap data. Points use approximate LSOA
-            centroids from anonymised police.uk records, so this is for monthly
-            planning review, not street-level deployment.
+            Basemap by CARTO using OpenStreetMap data. Points use approximate LSOA crime centers using
+            the provided latitude longitude coordinates of crimes that were anonymized to some degree
           </p>
-        </article>
-
-        <aside class="area-panel">
-          <p class="eyebrow">Selected area</p>
-          <h2 id="areaName">Select an area</h2>
-          <p id="areaMeta" class="muted">Click a point on the map or a row below.</p>
-          <span id="areaTier" class="tier-badge">No selection</span>
-
-          <div class="area-stats">
-            <div>
-              <span>Forecasted demand</span>
-              <strong id="areaDemand">-</strong>
-            </div>
-            <div>
-              <span>Recent change</span>
-              <strong id="areaUplift">-</strong>
-            </div>
-            <div>
-              <span>Serious-crime share</span>
-              <strong id="areaHarm">-</strong>
-            </div>
-            <div>
-              <span>Social context</span>
-              <strong id="areaContext">-</strong>
-            </div>
-          </div>
-
-          <div class="context-card">
-            <h3>Local context profile</h3>
-            <p>Lower deciles mean stronger social or economic pressure.</p>
-            <div id="contextProfile" class="context-profile"></div>
-          </div>
-
-          <div class="area-details">
-            <div>
-              <span>Population</span>
-              <strong id="areaPopulation">-</strong>
-            </div>
-            <div>
-              <span>Repeated high-demand months</span>
-              <strong id="areaRepeat">-</strong>
-            </div>
-          </div>
-
-          <div class="reason-box">
-            <h3>Why it is marked this way</h3>
-            <p id="areaReason">Select an area to see the main reasons in plain language.</p>
-          </div>
-        </aside>
-      </section>
-
-      <section class="lower-grid">
-        <article class="list-card">
-          <div class="section-head compact">
-            <div>
-              <p class="eyebrow">Review list</p>
-              <h2>Top areas to check</h2>
-            </div>
-          </div>
-          <div id="rankingList" class="ranking-list"></div>
-        </article>
-
-        <article class="explain-card">
-          <p class="eyebrow">What the map combines</p>
-          <h2>One result, several signals</h2>
-          <div class="factor-grid">
-            <div>
-              <b>Recorded demand</b>
-              <p>Recent and historical police.uk recorded crime demand.</p>
-            </div>
-            <div>
-              <b>Crime severity</b>
-              <p>More serious offence types count more than low-harm incidents.</p>
-            </div>
-            <div>
-              <b>Recent change</b>
-              <p>Areas with unusual upward movement are not hidden by long-term averages.</p>
-            </div>
-            <div>
-              <b>Education and economy</b>
-              <p>Official deprivation, income, employment, and education context help interpret risk.</p>
-            </div>
-          </div>
-          <div class="plain-warning">
-            <b>Important:</b> priority means "review first". It does not mean automatic
-            enforcement or automatic officer deployment.
-          </div>
         </article>
       </section>
     </main>
