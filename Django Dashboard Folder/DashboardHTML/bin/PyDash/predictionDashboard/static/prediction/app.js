@@ -206,9 +206,13 @@ function buildAuthoritySummaries(areas) {
 
     let tier = "routine";
 
-    if (priorityCount > 3) {
-      tier = "priority";
-    } else if (reserveCount > 3) {
+    if ((priorityCount / members.length) > 0.15) {
+      if (priorityCount * 1.5 > reserveCount){
+        tier = "priority";
+      } else {
+        tier = "reserve"
+      }
+    } else if ((reserveCount / members.length) > 0.15) {
       tier = "reserve";
     }
 

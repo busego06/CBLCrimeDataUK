@@ -127,8 +127,6 @@ def loadModelForecast(path, panel):
     forecast["longitude"] = forecast["longitude"].fillna(forecast["ladLongitude"])
     forecast = forecast.drop(columns=["ladLatitude", "ladLongitude"])
 
-    ## Check to make a better response to what the model says
-
     # Calculate the priority of the LSOA/LAD according to the model
     q90 = forecast["predictedCrimeCount"].quantile(0.90)
     q75 = forecast["predictedCrimeCount"].quantile(0.75)
