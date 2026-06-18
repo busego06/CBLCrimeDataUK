@@ -95,11 +95,17 @@ function tierColor(tier) {
 
 // Gets the tier of the node from the model output
 function tierFromDemandRank(area) {
-  if (area.demandRank >= state.priorityCutoff) {
+  const harmScore = Math.min(area.highHarmShare * 3, 1);
+
+  const riskScore =
+    area.demandRank * 0.75 +
+    harmScore * 0.25;
+
+  if (riskScore >= state.priorityCutoff) {
     return "priority";
   }
 
-  if (area.demandRank >= state.reserveCutoff) {
+  if (riskScore >= state.reserveCutoff) {
     return "reserve";
   }
 
