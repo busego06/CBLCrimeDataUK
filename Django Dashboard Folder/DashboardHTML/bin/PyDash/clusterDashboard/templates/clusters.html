@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Police area clustering</title>
+    <title>Police Area Clustering</title>
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -14,17 +14,13 @@
   <body>
     <header class="topbar">
       <div>
-        <p class="eyebrow">Group 10 prototype</p>
-        <h1>Police Demand Review Map</h1>
-        <p class="subhead">
-          A clear monthly map for police planners. It combines recorded crime,
-          severity, recent change, and education/economic context into one review
-          priority.
-        </p>
+        <p class="eyebrow">4CBLW020 Group 10</p>
+        <h1>Police Resource Planning Dashboard</h1>
       </div>
       <div class="forecast-card">
-        <span id="forceName">West Midlands Police</span>
-        <strong id="forecastMonth">Forecast month</strong>
+        <span id="forceName">England & Wales Crime Archive</span>
+
+        <a class="dashboard-link" href="/predictionDashboard/">Open Prediction Dashboard</a>
       </div>
     </header>
 
@@ -34,19 +30,18 @@
         <article class="map-card">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Main output</p>
-              <h2>Monthly review priority map</h2>
-              <p class="section-note">Drag, zoom, and click an area to inspect its local profile.</p>
+              <p class="eyebrow">Clustering Output</p>
+              <h2>Custom Authority Clusters</h2>
+              <p class="section-note">Select cluster centres and create custom authority areas.</p>
             </div>
             <div class="legend">
-              <button id="runButton" type="button">Run clustering</button>
-              <span id="runStatus"> Default text</span>
+              <button id="runButton" type="button">Run Clustering</button>
+              <span id="runStatus">Not Generated</span>
             </div>
           </div>
           <div id="allocationMap" role="img" aria-label="Monthly police demand review map"></div>
           <p class="map-note">
-            Basemap by CARTO using OpenStreetMap data. Points use approximate LSOA crime centers using
-            the provided latitude longitude coordinates of crimes that were anonymized to some degree
+            Map: OpenStreetMap & CARTO.
           </p>
         </article>
       </section>

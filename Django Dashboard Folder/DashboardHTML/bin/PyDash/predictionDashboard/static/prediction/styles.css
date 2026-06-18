@@ -4,7 +4,7 @@
   --ink: #142025;
   --muted: #647174;
   --line: #d9e0dc;
-  --teal: #0f766e;
+  --teal: #1f5f99;
   --red: #b71c1c;
   --amber: #ef6c00;
   --blue: #1565c0;
@@ -40,7 +40,7 @@ main {
   gap: 28px;
   padding: 30px 40px;
   color: #f8fbf9;
-  background: linear-gradient(115deg, #253132 0%, #294844 58%, #0f766e 100%);
+  background: linear-gradient(135deg, #0b1f33 0%, #17324d 50%, #254f73 100%);
 }
 
 .topbar h1 {
@@ -253,7 +253,7 @@ h3 {
 
 .map-tools {
   display: grid;
-  grid-template-columns: auto 360px auto;
+  grid-template-columns: 360px auto;
   align-items: end;
   gap: 18px;
 }
@@ -506,22 +506,14 @@ h3 {
   font-weight: 900;
 }
 
-.data-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 43px;
-  padding: 9px 12px;
-  color: var(--muted);
-  background: #fbfcfa;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  font-size: 13px;
+.dashboard-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #ffffff;
   font-weight: 850;
+  text-decoration: none;
 }
 
-.data-toggle input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--teal);
+.dashboard-link:hover {
+  text-decoration: underline;
 }

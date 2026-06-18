@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Police Resource Planning Dashboards</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'home/styles.css' %}" />
+  </head>
+
+  <body>
+    <main class="landing">
+      <p class="eyebrow">4CBLW020 Group 10</p>
+      <h1>Police Resource Planning Dashboards</h1>
+
+      <section class="dashboard-grid">
+        <a class="dashboard-card" href="/predictionDashboard/">
+          <span>Predictive Dashboard</span>
+          <h2>Demand & Risk Dashboard</h2>
+        </a>
+
+        <a class="dashboard-card" href="/clusterDashboard/">
+          <span>Clustering Dashboard</span>
+          <h2>LSOA Clustering</h2>
+        </a>
+      </section>
+    </main>
+  </body>
+</html>

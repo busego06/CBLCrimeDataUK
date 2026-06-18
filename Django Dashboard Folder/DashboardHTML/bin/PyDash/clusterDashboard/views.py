@@ -127,4 +127,4 @@ def runClustering(request):
 
 @ensure_csrf_cookie
 def clusterDashboard(request):
-    return HttpResponse(loader.get_template("./test.html").render())
+    return HttpResponse(loader.get_template("./clusters.html").render())
