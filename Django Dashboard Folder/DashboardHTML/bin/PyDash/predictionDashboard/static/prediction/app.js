@@ -233,7 +233,8 @@ function buildAuthoritySummaries(areas) {
       reserveCount,
       routineCount,
       tier,
-      latitude: weightedAverageByDemand(members, "latitude"), // Calculating LAD point through average of LSOA coordinates
+      // Calculating LAD point through average of LSOA coordinates
+      latitude: weightedAverageByDemand(members, "latitude"), 
       longitude: weightedAverageByDemand(members, "longitude"),
       imdDecile: weightedAverageByDemand(members, "imdDecile"),
       incomeDecile: weightedAverageByDemand(members, "incomeDecile"),
@@ -675,6 +676,7 @@ function init() {
       ),
   ].join("");
 
+  // Dropdown Menu
   elements.authoritySelect.addEventListener("change", (event) => {
     state.ladSelected = event.target.value;
     state.selectedCode = null;
@@ -682,6 +684,7 @@ function init() {
     renderAll();
   });
 
+  // Search Bar
   elements.searchInput.addEventListener("input", (event) => {
     state.search = event.target.value;
     const matches = visibleAreas();
@@ -696,9 +699,10 @@ function init() {
     renderAll();
   });
 
+  // Download Button
   elements.downloadButton.addEventListener("click", downloadList);
 
-  // Tier threshold slider
+  // Tier Threshold Slider
   noUiSlider.create(elements.tierSlider, {
     start: [75, 90],
     connect: [false, true, false],
