@@ -5,6 +5,8 @@ const state = {
   ladSelected: "all",
   search: "",
   selectedCode: null,
+  reserveCutoff: 0.75,
+  priorityCutoff: 0.90,
   areas: [],
   authoritySummaries: [],
 };
@@ -29,7 +31,9 @@ const elements = {
   contextTitle: document.getElementById("contextTitle"),
   contextHint: document.getElementById("contextHint"),
   contextProfile: document.getElementById("contextProfile"),
-
+  tierSlider: document.getElementById("tierSlider"),
+  reserveValue: document.getElementById("reserveValue"),
+  priorityValue: document.getElementById("priorityValue"),
   rankingList: document.getElementById("rankingList"),
 };
 
@@ -90,11 +94,15 @@ function tierColor(tier) {
 }
 
 // Gets the tier of the node from the model output
-function tierFromModel(area) {
-  const tier = String(area.originalTier || "").toLowerCase();
+function tierFromDemandRank(area) {
+  if (area.demandRank >= state.priorityCutoff) {
+    return "priority";
+  }
 
-  if (tier.includes("priority")) return "priority";
-  if (tier.includes("reserve")) return "reserve";
+  if (area.demandRank >= state.reserveCutoff) {
+    return "reserve";
+  }
+
   return "routine";
 }
 
@@ -242,7 +250,7 @@ function prepareData() {
   state.areas = dashboardData.areas
     .map((area) => ({
       ...area,
-      tier: tierFromModel(area),
+      tier: tierFromDemandRank(area),
     }))
     .sort((a, b) => b.predictedDemand - a.predictedDemand);
 
@@ -689,6 +697,33 @@ function init() {
   });
 
   elements.downloadButton.addEventListener("click", downloadList);
+
+  // Tier threshold slider
+  noUiSlider.create(elements.tierSlider, {
+    start: [75, 90],
+    connect: [false, true, false],
+    margin: 5,
+    step: 1,
+    range: {
+      min: 0,
+      max: 100,
+    },
+  });
+
+  elements.tierSlider.noUiSlider.on("update", (values) => {
+    state.reserveCutoff = Number(values[0]) / 100;
+    state.priorityCutoff = Number(values[1]) / 100;
+
+    elements.reserveValue.textContent = `${Math.round(values[0])}%`;
+    elements.priorityValue.textContent = `${Math.round(values[1])}%`;
+
+    elements.tierSlider.style.setProperty("--reserve-stop", `${Math.round(values[0])}%`);
+
+    elements.tierSlider.style.setProperty("--priority-stop", `${Math.round(values[1])}%`);
+
+    prepareData();
+    renderAll();
+  });
 
   window.addEventListener("resize", () => {
     if (mapState.map) {

@@ -229,6 +229,7 @@ h3 {
   align-items: flex-end;
   gap: 18px;
   margin-left: auto;
+  min-width: 720px;
 }
 
 .area-stats {
@@ -248,6 +249,81 @@ h3 {
   display: block;
   margin-top: 2px;
   font-size: 24px;
+}
+
+.map-tools {
+  display: grid;
+  grid-template-columns: auto 360px auto;
+  align-items: end;
+  gap: 18px;
+}
+
+.tier-slider-card {
+  width: 360px;
+}
+
+.tier-slider-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.tier-slider-head span {
+  color: var(--muted);
+  font-weight: 850;
+}
+
+#tierSlider {
+  height: 12px;
+  margin: 0 14px;
+}
+
+#tierSlider.noUi-target {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+#tierSlider .noUi-base {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--blue) 0%,
+    var(--blue) var(--reserve-stop, 75%),
+    var(--amber) var(--reserve-stop, 75%),
+    var(--amber) var(--priority-stop, 90%),
+    var(--red) var(--priority-stop, 90%),
+    var(--red) 100%
+  );
+}
+
+#tierSlider .noUi-connects {
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+#tierSlider .noUi-connect {
+  background: transparent;
+}
+
+#tierSlider .noUi-handle {
+  width: 22px;
+  height: 22px;
+  right: -11px;
+  top: -6px;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  background: var(--ink);
+  box-shadow: 0 3px 10px rgba(20, 32, 37, 0.25);
+  cursor: grab;
+}
+
+#tierSlider .noUi-handle::before,
+#tierSlider .noUi-handle::after {
+  display: none;
 }
 
 .legend {
@@ -430,52 +506,22 @@ h3 {
   font-weight: 900;
 }
 
-@media (max-width: 1180px) {
-  .controls,
-  .summary-grid,
-  .lower-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .section-head {
-    flex-direction: column;
-  }
-
-  .map-head {
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .area-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.data-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 43px;
+  padding: 9px 12px;
+  color: var(--muted);
+  background: #fbfcfa;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 850;
 }
 
-@media (max-width: 760px) {
-  main,
-  .topbar {
-    padding: 16px;
-  }
-
-  .topbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .summary-grid,
-  .area-stats {
-    grid-template-columns: 1fr;
-  }
-
-  #allocationMap {
-    height: 460px;
-  }
-
-  .context-row {
-    grid-template-columns: 1fr;
-  }
-
-  .context-row strong {
-    text-align: left;
-  }
+.data-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--teal);
 }

@@ -113,6 +113,16 @@ def loadModelForecast(path, panel):
     forecast["predictedCrimeCount"] = pd.to_numeric(forecast["predictedCrimeCount"], errors="coerce").fillna(0)
     forecast["lsoaShare"] = pd.to_numeric(forecast["lsoaShare"], errors="coerce").fillna(0)
 
+    # Create a data version without extreme outliers
+    q1 = forecast["predictedCrimeCount"].quantile(0.25)
+    q3 = forecast["predictedCrimeCount"].quantile(0.75)
+    iqr = q3 - q1
+
+    lowerLimit = q1 - (1.5 * iqr)
+    upperLimit = q3 + (1.5 * iqr)
+
+    forecast["processedPredictedCrimeCount"] = forecast["predictedCrimeCount"].clip(lower=0, upper=upperLimit)
+
     # Link forecast LSOAs with crime data coordinates stored in the panel dataframe
     lsoaCoords = (panel.groupby("LSOA code", as_index=False).agg(
         latitude=("latitude", "median"), 
@@ -126,14 +136,6 @@ def loadModelForecast(path, panel):
     forecast["latitude"] = forecast["latitude"].fillna(forecast["ladLatitude"])
     forecast["longitude"] = forecast["longitude"].fillna(forecast["ladLongitude"])
     forecast = forecast.drop(columns=["ladLatitude", "ladLongitude"])
-
-    # Calculate the priority of the LSOA/LAD according to the model
-    q90 = forecast["predictedCrimeCount"].quantile(0.90)
-    q75 = forecast["predictedCrimeCount"].quantile(0.75)
-
-    forecast["allocationTier"] = "routine"
-    forecast.loc[forecast["predictedCrimeCount"] >= q75, "allocationTier"] = "reserve"
-    forecast.loc[forecast["predictedCrimeCount"] >= q90, "allocationTier"] = "priority"
 
     return forecast
 
@@ -201,10 +203,10 @@ def JSDataPrep(forecast, context, recentSummary):
             "ladCode": str(row.get("LAD code", "")),
             "longitude": longitude,
             "latitude": latitude,
-            "predictedDemand": round(float(row["predictedCrimeCount"]), 2),
+            "fullPredictedDemand": round(float(row["predictedCrimeCount"]),2),
+            "processedPredictedDemand": round(float(row["processedPredictedCrimeCount"]),2),
             "lsoaShare": round(float(row.get("lsoaShare", 0)), 6),
             "population": int(row.get("Population", 0)),
-            "originalTier": str(row["allocationTier"]),
             "highHarmShare": round(float(row.get("highHarmPercent", 0)), 4),
             "demandRank": round(float(row["predictedRank"]), 5),
             "imdDecile": int(row["imdDecile"]) if pd.notna(row.get("imdDecile")) else 0,

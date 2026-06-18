@@ -8,6 +8,11 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/nouislider@15.8.1/dist/nouislider.min.css"
+    />
+
     {% load static %}
     <link rel="stylesheet" href="{% static 'prediction/styles.css' %}" />
   </head>
@@ -22,7 +27,6 @@
         <strong id="forecastMonth">Forecast</strong>
       </div>
     </header>
-
     <main>
       <section class="controls" aria-label="Map controls">
         <label>
@@ -35,7 +39,6 @@
         </label>
         <button id="downloadButton" type="button">Export Data</button>
       </section>
-
       <section class="summary-grid" aria-label="Map summary">
         <article>
           <span>Priority Patrol</span>
@@ -55,7 +58,6 @@
           <small id="shownLabel">Area</small>
         </article>
       </section>
-
       <section class="map-layout">
         <article class="map-card">
           <div class="section-head">
@@ -78,11 +80,26 @@
                   <strong id="mapPopulation">-</strong>
                 </div>
               </div>
-
-              <div class="legend">
-                <span><i class="priority-dot"></i>Priority Patrol</span>
-                <span><i class="reserve-dot"></i>Risk Addressing Patrol</span>
-                <span><i class="routine-dot"></i>Standard Patrol</span>
+              <div class="map-tools">
+                <label class="data-toggle">
+                  <span>Processed Data</span>
+                  <input id="dataToggle" type="checkbox" checked />
+                </label>
+                <div class="tier-slider-card">
+                  <div class="tier-slider-head">
+                    <span>Tier Thresholds</span>
+                    <small>
+                      Risk Addressing: <b id="reserveValue">75%</b> |
+                      Priority: <b id="priorityValue">90%</b>
+                    </small>
+                  </div>
+                  <div id="tierSlider"></div>
+                </div>
+                <div class="legend">
+                  <span><i class="priority-dot"></i>Priority Patrol</span>
+                  <span><i class="reserve-dot"></i>Risk Addressing Patrol</span>
+                  <span><i class="routine-dot"></i>Standard Patrol</span>
+                </div>
               </div>
             </div>
           </div>
@@ -110,10 +127,12 @@
         </article>
       </section>
     </main>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@15.8.1/dist/nouislider.min.js"></script>
+
     {% load static %}
     <script src="{% static 'prediction/data/dashboardData.js' %}"></script>
+
     {% load static %}
     <script src="{% static 'prediction/app.js' %}"></script>
   </body>

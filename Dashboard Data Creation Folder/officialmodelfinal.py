@@ -182,7 +182,7 @@ crimeIQRAbsence = crimeIQRAbsence.dropna(subset=["persistent_absence_percent"])
 crimeIQRAbsenceHomeless = crimeIQRAbsence.merge(homelessClean, on=["LAD"], how="left")
 
 merged = crimeIQRAbsenceHomeless.merge(imdByLAD, on=["LAD"], how="left")
-#merged = merged[merged["Crime Rate"] >= 1000]
+merged = merged[merged["Crime Rate"] >= 1000]
 
 
 ## LAD REGRESSION MODEL
