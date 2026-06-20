@@ -1,14 +1,14 @@
-# police.uk crime files
+# Crime Data Files
 
-The CSV files are not committed to GitHub because they are large external data files. Download them from:
+The CSV files are not committed to the repository because they are too large. Download them from:
 
 ```text
 https://data.police.uk/data/
 ```
 
-Place extracted police.uk crime CSV files in this folder.
+Place these downloaded CSV files in this folder.
 
-The scripts search recursively, so monthly subfolders are accepted:
+The python scripts search recursively so monthly subfolders are accepted as shown below:
 
 ```text
 CrimeData/
