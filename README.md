@@ -169,11 +169,13 @@ The folder structure inside the data folder should be identical to that provided
 
 ### 2. Compile the executable
 
-The CMakeLists file requried to compile the executable found in clusterDashboard/Crime Grouper/Crime Grouper is already set up. You need to have a valid install of a C++ compiler that supports cmake compilation, Clang for MacOS, MSVC for Windows, Linux was not tested as a platform.
+The repository contains compiled binaries for Windows (Compiled via instructions below on a university laptop) and for MacOS ARM64 (Compiled on an M2 Pro Macbook Pro). The binaries should be widely compatible with modern Windows x86-64 and MacOS ARM64 machines. If the binary is incompatible with your device, follow the below instructions to generate a new binary.
+
+The CMakeLists file requried to compile the executable found in clusterDashboard/Crime Grouper/Crime Grouper is already set up. You need to have a valid install of a C++ compiler that supports cmake compilation, Clang for MacOS, MinGW for windows.
 The command used on the primary device of development of the clustering dashboard is:
 
 ```powershell
-cmake -B build && cmake --build build --config Release
+cmake -B build; cmake --build build --config Release
 ```
 
 Run this in the directory:
