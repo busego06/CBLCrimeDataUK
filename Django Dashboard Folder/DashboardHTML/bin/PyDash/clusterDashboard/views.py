@@ -82,7 +82,7 @@ def runClustering(request):
     try:
         res = subprocess.run(
             [str(EXECUTABLE), inputPath, outputPath, str(LSOA_CACHE)],
-            cwd=GROUPING_DIR, capture_output=True, text=True, timeout=90,
+            cwd=GROUPING_DIR, capture_output=True, text=True, timeout=600,
         )
     except subprocess.TimeoutExpired:
         # Clean up temp files

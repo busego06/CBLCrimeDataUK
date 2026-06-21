@@ -1,0 +1,3 @@
+C:/CodingProject/CBL/CBLCrimeDataUK/Django Dashboard Folder/DashboardHTML/bin/PyDash/clusterDashboard/Crime Grouper/Crime Grouper/build/CMakeFiles/Clustering.dir
+C:/CodingProject/CBL/CBLCrimeDataUK/Django Dashboard Folder/DashboardHTML/bin/PyDash/clusterDashboard/Crime Grouper/Crime Grouper/build/CMakeFiles/edit_cache.dir
+C:/CodingProject/CBL/CBLCrimeDataUK/Django Dashboard Folder/DashboardHTML/bin/PyDash/clusterDashboard/Crime Grouper/Crime Grouper/build/CMakeFiles/rebuild_cache.dir

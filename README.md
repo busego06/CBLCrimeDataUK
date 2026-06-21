@@ -172,7 +172,15 @@ The folder structure inside the data folder should be identical to that provided
 The CMakeLists file requried to compile the executable found in clusterDashboard/Crime Grouper/Crime Grouper is already set up. You need to have a valid install of a C++ compiler that supports cmake compilation, Clang for MacOS, MSVC for Windows, Linux was not tested as a platform.
 The command used on the primary device of development of the clustering dashboard is:
 
+```powershell
 cmake -B build && cmake --build build --config Release
+```
+
+Run this in the directory:
+
+```text
+CBLCrimeDataUK/Django Dashboard Folder/DashboardHTML/bin/PyDash/clusterDashboard/Crime Grouper/Crime Grouper
+```
 
 This command is tested and functional as of the Clang compiler provided with the latest MacOS XCode and development tools as of Beta MacOS 27.
 You may need to adjust the command accordingly to account for any changes, but the principle remains the same.
