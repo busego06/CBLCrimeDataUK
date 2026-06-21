@@ -159,6 +159,38 @@ http://127.0.0.1:8000/clusterDashboard/
 
 The dashboard uses Leaflet with CARTO/OpenStreetMap, so an internet connection is required for the map background.
 
+## Reproducing the Cluster Dashboard
+
+### 1. Add external files
+
+The cluster dashboard relies on a binary compiled from C++ code to function.
+That binary expects to see a folder called "data" in the active directory in which it is being executed.
+The folder structure inside the data folder should be identical to that provided directly from police.uk, the repository contains only a single month of data due to space concerns. That one month shows you the expected folder structure. Additional months of data can be added alongside it in any amount.
+
+### 2. Compile the executable
+
+The CMakeLists file requried to compile the executable found in clusterDashboard/Crime Grouper/Crime Grouper is already set up. You need to have a valid install of a C++ compiler that supports cmake compilation, Clang for MacOS, MSVC for Windows, Linux was not tested as a platform.
+The command used on the primary device of development of the clustering dashboard is:
+
+cmake -B build && cmake --build build --config Release
+
+This command is tested and functional as of the Clang compiler provided with the latest MacOS XCode and development tools as of Beta MacOS 27.
+You may need to adjust the command accordingly to account for any changes, but the principle remains the same.
+
+By the end of the compilation you should have a build folder with an executable which should be named "Clustering" for MacOS or Linux and "Clustering.exe" for Windows.
+
+### 3. Cache LSOAs into a file
+
+The clustering binary relies on a pre-computer cache of LSOAs with crime counts and average crime coordinates. This file is automatically computed if absent on first launch of the code. The repository provides a sample LSOAs.csv file, computed from a single month of data.
+
+Note: Increasing amounts of data can increase the runtime of the LSOA caching A LOT. Be ready to leave the code running for a long time.
+
+The LSOAs.csv file is expected in and saved to the active directory of the clustering executable. Make sure the active directory is consistent across runs, default is within the Crime Grouper folder containing the build and data folders.
+
+### 4. Start the dashboard
+
+If all of the above steps were performed correctly the dashboard should be able to launch and perform the clustering as expected at this point.
+The clustering executable is addressed by the Django thread in real time and is not cached so restarting the dashboard is not necessary to test the correct compilation.
 
 # Research Materials
 
