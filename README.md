@@ -124,7 +124,7 @@ From the repository root, run:
 py "Dashboard Data Creation Folder/dashboardData.py"
 ```
 
-Read:
+The file should read:
 
 ```text
 Dashboard Data Creation Folder/data/CrimeData/
@@ -167,6 +167,13 @@ The cluster dashboard relies on a binary compiled from C++ code to function.
 That binary expects to see a folder called "data" in the active directory in which it is being executed.
 The folder structure inside the data folder should be identical to that provided directly from police.uk, the repository contains only a single month of data due to space concerns. That one month shows you the expected folder structure. Additional months of data can be added alongside it in any amount.
 
+The crime data source is too large to keep directly in GitHub and must be downloaded manually. How to download this source can be found in:
+
+```text
+CBLCrimeDataUK/Dashboard Data Creation Folder/data/CrimeData/README.md
+```
+
+
 ### 2. Compile the executable
 
 The CMakeLists file requried to compile the executable found in clusterDashboard/Crime Grouper/Crime Grouper is already set up. You need to have a valid install of a C++ compiler that supports cmake compilation, Clang for MacOS, MSVC for Windows, Linux was not tested as a platform.
@@ -202,10 +209,10 @@ The clustering executable is addressed by the Django thread in real time and is 
 
 # Research Materials
 
-The research files are found in:
+Since the files are too big, the research files are found in:
 
 ```text
-Research Folder/
+https://drive.google.com/drive/folders/17BvAdB3QG_zEezWhxmFV43IwvzcVyC4L?usp=sharing
 ```
 
-To reproduce the research part of the project extract the zip folder and run the scripts from the parent directory of the SSA folders. The outputs will be in each output folder of each SSA. SSA2 is the earliest, SSA7 is the newest.
+To reproduce the research part of the project download and extract the zip folder in the Research Folder and run the scripts from the parent directory of the SSA folders. The outputs will be in each output folder of each SSA. SSA2 is the earliest, SSA7 is the newest. Some of the data from the report can be reproduced here.
