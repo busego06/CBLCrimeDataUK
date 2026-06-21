@@ -10,6 +10,7 @@ env/
 *.csv
 !persistentabsence.csv
 !PopulationDeprivationIndex.csv
+!LSOAs.csv
 
 # External/manual download. See README.md.
 #!LSOALAD.csv
